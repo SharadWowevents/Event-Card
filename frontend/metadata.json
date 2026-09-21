@@ -1,0 +1,10 @@
+{
+  "name": "EventCards - Event Advocacy & AGC Platform",
+  "description": "High-conversion event advocacy and attendee-generated content platform featuring live HD social badge generator, smart gallery with AI face-matching, organizer admin portal, and EMV analytics.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
