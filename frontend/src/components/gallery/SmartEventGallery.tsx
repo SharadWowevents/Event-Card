@@ -20,6 +20,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadImageBase64, setUploadImageBase64] = useState<string>('');
+  const [uploadFile, setUploadFile] = useState<File | null>(null); // NEW: Store the actual file
   const [uploadForm, setUploadForm] = useState({
     title: '', location: '', timeString: '', credit: '', identifiedPeople: ''
   });
@@ -28,84 +29,104 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
   // Lightbox State
   const [activeMoment, setActiveMoment] = useState<EventMoment | null>(null);
 
+  const API_BASE = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000/api' 
+    : '/api';
+
   useEffect(() => {
     setIsLoading(true);
     const eventId = event.id || event._id;
 
-    const fetchAttendees = fetch(`/api/events/${eventId}/leads`)
+    const fetchAttendees = fetch(`${API_BASE}/events/${eventId}/leads`)
       .then(res => res.json())
       .then(data => {
         const mappedLeads = data.map((d: any) => ({ 
           ...d, 
           id: d._id, 
-          // NEW: Prioritize the framed poster, fallback to raw selfie
           badgeThumbnail: d.finalBadgeUrl || d.avatarUrl 
         }));
         setAttendees(mappedLeads);
       });
 
-    const fetchMoments = fetch(`/api/events/${eventId}/moments`)
+    const fetchMoments = fetch(`${API_BASE}/events/${eventId}/moments`)
       .then(res => res.json())
       .then(data => setMoments(data));
 
     Promise.all([fetchAttendees, fetchMoments])
       .catch(err => console.error("Failed to fetch gallery data:", err))
       .finally(() => setIsLoading(false));
-  }, [event]);
+  }, [event, API_BASE]);
 
   // Handle Initial File Selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Store the physical file for Multer
+    setUploadFile(file);
+
+    // Keep the Base64 reader ONLY for the UI preview inside the modal
     const reader = new FileReader();
     reader.onload = (ev) => {
       if (ev.target?.result) {
         setUploadImageBase64(ev.target.result as string);
-        setUploadModalOpen(true); // Open details modal instead of uploading instantly
+        setUploadModalOpen(true); 
       }
     };
     reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Submit Upload with Metadata
+  // Submit Upload with Metadata via FormData
   const submitUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadImageBase64) return;
+    if (!uploadFile) return;
     setIsUploading(true);
 
-    const peopleArray = uploadForm.identifiedPeople.split(',').map(s => s.trim()).filter(Boolean);
-
     try {
-      const res = await fetch(`/api/events/${event.id || event._id}/moments`, {
+      const formData = new FormData();
+      // 1. MUST match the Multer field name in backend: upload.single('momentImage')
+      formData.append('momentImage', uploadFile);
+      
+      // 2. Append metadata
+      formData.append('title', uploadForm.title || 'Event Moment');
+      formData.append('location', uploadForm.location || 'Main Venue');
+      formData.append('timeString', uploadForm.timeString || 'Day 1');
+      formData.append('credit', uploadForm.credit || 'Event Photography');
+
+      // 3. Append identified people array
+      const peopleArray = uploadForm.identifiedPeople.split(',').map(s => s.trim()).filter(Boolean);
+      peopleArray.forEach(person => formData.append('identifiedPeople', person));
+
+      const res = await fetch(`${API_BASE}/events/${event.id || event._id}/moments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          imageUrl: uploadImageBase64,
-          title: uploadForm.title || 'Event Moment',
-          location: uploadForm.location || 'Main Venue',
-          timeString: uploadForm.timeString || 'Day 1',
-          credit: uploadForm.credit || 'Event Photography',
-          identifiedPeople: peopleArray
-        })
+        body: formData // Notice: No Content-Type header so browser sets multipart boundary automatically
       });
+      
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Backend rejected payload");
+      }
+      
       const newMoment = await res.json();
       setMoments(prev => [newMoment, ...prev]);
       setUploadModalOpen(false);
       setUploadForm({ title: '', location: '', timeString: '', credit: '', identifiedPeople: '' });
       setUploadImageBase64('');
-    } catch (err) {
+      setUploadFile(null);
+    } catch (err: any) {
       console.error("Upload failed", err);
+      alert(`Upload failed: ${err.message}`);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDeleteMoment = async (momentId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the lightbox
+    e.stopPropagation(); 
     if (!window.confirm("Are you sure you want to delete this moment?")) return;
     try {
-      const res = await fetch(`/api/events/${event.id || event._id}/moments/${momentId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/events/${event.id || event._id}/moments/${momentId}`, { method: 'DELETE' });
       if (res.ok) setMoments(prev => prev.filter(m => m._id !== momentId));
     } catch (err) { console.error("Delete failed", err); }
   };

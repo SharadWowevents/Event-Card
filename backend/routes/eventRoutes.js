@@ -2,47 +2,59 @@ const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
 const Lead = require('../models/Lead');
-const upload = require('../middleware/upload');
 const Moment = require('../models/Moment');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
+// ==========================================
+// 1. DIRECTORY SETUP & MULTER CONFIGURATION
+// ==========================================
 
-// 1. Ensure the uploads directory exists on your VPS
+// A. Custom Frames Setup
 const framesDir = path.join(__dirname, '../uploads/frames');
-if (!fs.existsSync(framesDir)) {
-  fs.mkdirSync(framesDir, { recursive: true });
-}
+if (!fs.existsSync(framesDir)) fs.mkdirSync(framesDir, { recursive: true });
 
-// 2. Configure Multer Storage Engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, framesDir);
-  },
+const frameStorage = multer.diskStorage({
+  destination: function (req, file, cb) { cb(null, framesDir); },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
     const ext = path.extname(file.originalname) || '.png';
     cb(null, 'frame_' + uniqueSuffix + ext);
   }
 });
+const frameUpload = multer({ storage: frameStorage });
 
-const frameUpload = multer({ storage: storage });
+// B. Event Moments Setup
+const momentsDir = path.join(__dirname, '../uploads/moments');
+if (!fs.existsSync(momentsDir)) fs.mkdirSync(momentsDir, { recursive: true });
 
-// 1. Get all events
+const momentStorage = multer.diskStorage({
+  destination: function (req, file, cb) { cb(null, momentsDir); },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, 'moment_' + uniqueSuffix + ext);
+  }
+});
+const momentUpload = multer({ storage: momentStorage });
+
+// ==========================================
+// 2. CORE EVENT ROUTES
+// ==========================================
+
+// Get all events
 router.get('/', async (req, res) => {
   try {
     const { status, search } = req.query;
     let query = {};
 
-    if (status && status !== 'all') {
-      query.status = status;
-    }
+    if (status && status !== 'all') query.status = status;
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { venue: { $regex: search, $options: 'i' } },
-        { slug: { $regex: search, $options: 'i' } }
+        { name: { $regex: search,$options: 'i' } },
+        { venue: { $regex: search,$options: 'i' } },
+        { slug: { $regex: search,$options: 'i' } }
       ];
     }
 
@@ -53,7 +65,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. Get event by Slug or ID
+// Get event by Slug or ID
 router.get('/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
@@ -69,17 +81,14 @@ router.get('/:identifier', async (req, res) => {
   }
 });
 
-// 3. Create Event
+// Create Event
 router.post('/', async (req, res) => {
-
   try {
     const { name, slug } = req.body;
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
     const existing = await Event.findOne({ slug: generatedSlug });
-    if (existing) {
-      return res.status(400).json({ error: 'Event slug already in use' });
-    }
+    if (existing) return res.status(400).json({ error: 'Event slug already in use' });
 
     const event = new Event({ ...req.body, slug: generatedSlug });
     await event.save();
@@ -89,7 +98,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 4. Update Event
+// Update Event
 router.put('/:id', async (req, res) => {
   try {
     const updated = await Event.findByIdAndUpdate(req.params.id, req.body, {
@@ -103,61 +112,18 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// 5. Admin Upload Custom Frame to Event
-router.post('/:id/frames', frameUpload.single('frameImage'), async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ error: 'Event not found' });
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file was received by the server' });
-    }
-
-    const label = req.body.label || 'Custom Frame';
-    
-    // Use a clean relative path mapped to the API route
-    const publicUrl = `/api/uploads/frames/${req.file.filename}`;
-
-    // Save to MongoDB
-    event.customFrames.push({ url: publicUrl, label });
-    await event.save();
-    
-    res.status(201).json(event.customFrames);
-  } catch (err) {
-    console.error("Upload Error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-// 6. Delete Custom Frame
-router.delete('/:id/frames/:frameId', async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ error: 'Event not found' });
-
-    event.customFrames = event.customFrames.filter(
-      (frame) => frame._id.toString() !== req.params.frameId
-    );
-    await event.save();
-    res.json({ message: 'Frame deleted', customFrames: event.customFrames });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 7. Get Event Leads
+// Get Event Leads
 router.get('/:id/leads', async (req, res) => {
   try {
     const { role, search } = req.query;
     let query = { event: req.params.id };
 
-    if (role && role !== 'All') {
-      query.role = role.toLowerCase();
-    }
+    if (role && role !== 'All') query.role = role.toLowerCase();
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
-        { title: { $regex: search, $options: 'i' } }
+        { name: { $regex: search,$options: 'i' } },
+        { company: { $regex: search,$options: 'i' } },
+        { title: { $regex: search,$options: 'i' } }
       ];
     }
 
@@ -168,28 +134,85 @@ router.get('/:id/leads', async (req, res) => {
   }
 });
 
-// NEW: Upload an Event Moment
-router.post('/:id/moments', async (req, res) => {
+// ==========================================
+// 3. CUSTOM FRAMES UPLOAD ROUTES
+// ==========================================
+
+// Upload Custom Frame
+router.post('/:id/frames', frameUpload.single('frameImage'), async (req, res) => {
   try {
-    const moment = new Moment({
-      event: req.params.id,
-      imageUrl: req.body.imageUrl
-    });
-    await moment.save();
-    res.status(201).json(moment);
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file was received by the server' });
+    }
+
+    const label = req.body.label || 'Custom Frame';
+    const publicUrl = `/api/uploads/frames/${req.file.filename}`; // Clean relative URL
+
+    event.customFrames.push({ url: publicUrl, label });
+    await event.save();
+    
+    res.status(201).json(event.customFrames);
+  } catch (err) {
+    console.error("Upload Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete Custom Frame
+router.delete('/:id/frames/:frameId', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const frameToDelete = event.customFrames.find(f => f._id.toString() === req.params.frameId);
+
+    // Physically delete the file from VPS disk
+    if (frameToDelete) {
+      const filename = frameToDelete.url.split('/').pop();
+      const filePath = path.join(__dirname, '../uploads/frames', filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+
+    // Remove from MongoDB
+    event.customFrames = event.customFrames.filter(f => f._id.toString() !== req.params.frameId);
+    await event.save();
+
+    res.json({ success: true, customFrames: event.customFrames });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// NEW: Get all Event Moments
-router.post('/:id/moments', async (req, res) => {
+// ==========================================
+// 4. EVENT MOMENTS (GALLERY) ROUTES
+// ==========================================
+
+// Fetch Moments for Gallery
+router.get('/:id/moments', async (req, res) => {
   try {
-    const { imageUrl, title, location, timeString, credit, identifiedPeople } = req.body;
+    const moments = await Moment.find({ event: req.params.id }).sort({ createdAt: -1 });
+    res.json(moments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload Event Moment
+router.post('/:id/moments', momentUpload.single('momentImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file was received by the server' });
+    }
+
+    const publicUrl = `/api/uploads/moments/${req.file.filename}`;
+    const { title, location, timeString, credit, identifiedPeople } = req.body;
 
     const moment = new Moment({
       event: req.params.id,
-      imageUrl,
+      imageUrl: publicUrl,
       title,
       location,
       timeString,
@@ -204,66 +227,20 @@ router.post('/:id/moments', async (req, res) => {
   }
 });
 
-// NEW: Delete an Event Moment
+// Delete Event Moment
 router.delete('/:id/moments/:momentId', async (req, res) => {
   try {
+    const moment = await Moment.findById(req.params.momentId);
+    if (!moment) return res.status(404).json({ error: 'Moment not found' });
+
+    // Physically delete the file from VPS disk
+    const filename = moment.imageUrl.split('/').pop();
+    const filePath = path.join(__dirname, '../uploads/moments', filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    // Delete from MongoDB
     await Moment.findByIdAndDelete(req.params.momentId);
     res.json({ success: true, message: 'Moment deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// NEW: Upload a Custom Frame to an Event
-router.post('/:id/frames', upload.single('frameImage'), async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ error: 'Event not found' });
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file was received by the server' });
-    }
-
-    const label = req.body.label || 'Custom Frame';
-    
-    // UPDATED: Use a clean relative path mapped to the API route
-    const publicUrl = `/api/uploads/frames/${req.file.filename}`;
-
-    // Save to MongoDB
-    event.customFrames.push({ url: publicUrl, label });
-    await event.save();
-    
-    res.status(201).json(event.customFrames);
-  } catch (err) {
-    console.error("Upload Error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// NEW: Delete a Custom Frame
-router.delete('/:id/frames/:frameId', async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ error: 'Event not found' });
-
-    // Find the frame to delete
-    const frameToDelete = event.customFrames.find(f => f._id.toString() === req.params.frameId);
-
-    if (frameToDelete) {
-      // Extract the filename from the URL and delete the physical file
-      const filename = frameToDelete.url.split('/').pop();
-      const filePath = path.join(__dirname, '../uploads/frames', filename);
-
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-
-    // Remove from MongoDB
-    event.customFrames = event.customFrames.filter(f => f._id.toString() !== req.params.frameId);
-    await event.save();
-
-    res.json({ success: true, customFrames: event.customFrames });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
