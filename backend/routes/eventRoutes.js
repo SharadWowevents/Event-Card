@@ -80,19 +80,40 @@ router.put('/:id', async (req, res) => {
 });
 
 // 5. Admin Upload Custom Frame to Event
-router.post('/:id/frames', upload.single('frame'), async (req, res) => {
+router.post('/:id/frames', async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    if (!req.file) return res.status(400).json({ error: 'No frame image provided' });
+    const { url, label } = req.body; // 'url' here is the Base64 string from React
+    
+    // 1. Ensure the uploads directory exists on your VPS
+    const framesDir = path.join(__dirname, '../uploads/frames');
+    if (!fs.existsSync(framesDir)) {
+      fs.mkdirSync(framesDir, { recursive: true });
+    }
 
-    const frameUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    const frameLabel = req.body.label || `Custom Frame ${event.customFrames.length + 1}`;
+    // 2. Decode the Base64 string
+    const matches = url.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ error: 'Invalid base64 image string' });
+    }
+    
+    const extension = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+    const imageBuffer = Buffer.from(matches[2], 'base64');
+    const filename = `frame_${Date.now()}_${Math.round(Math.random() * 1000)}.${extension}`;
+    const filePath = path.join(framesDir, filename);
 
-    event.customFrames.push({ label: frameLabel, url: frameUrl });
+    // 3. Write the physical file to your VPS disk
+    fs.writeFileSync(filePath, imageBuffer);
+
+    // 4. Generate the public URL (e.g., http://localhost:5000/uploads/frames/frame_123.png)
+    const publicUrl = `${req.protocol}://${req.get('host')}/uploads/frames/${filename}`;
+
+    // 5. Save the clean URL to MongoDB
+    event.customFrames.push({ url: publicUrl, label });
     await event.save();
-
+    
     res.status(201).json(event.customFrames);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -207,6 +228,20 @@ router.delete('/:id/frames/:frameId', async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
+    // Find the frame to delete
+    const frameToDelete = event.customFrames.find(f => f._id.toString() === req.params.frameId);
+    
+    if (frameToDelete) {
+      // Extract the filename from the URL and delete the physical file
+      const filename = frameToDelete.url.split('/').pop();
+      const filePath = path.join(__dirname, '../uploads/frames', filename);
+      
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Remove from MongoDB
     event.customFrames = event.customFrames.filter(f => f._id.toString() !== req.params.frameId);
     await event.save();
     
