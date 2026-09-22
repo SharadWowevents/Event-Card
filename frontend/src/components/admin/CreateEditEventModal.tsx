@@ -51,10 +51,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setLocation(eventToEdit?.location || 'San Francisco, CA');
       setWebsite(eventToEdit?.website || 'https://event.example.com');
       setStatus(eventToEdit?.status || 'active');
-      setPrimaryColor(eventToEdit?.theme.primaryColor || '#0ea5e9');
-      setSecondaryColor(eventToEdit?.theme.secondaryColor || '#10b981');
-      setFontFamily(eventToEdit?.theme.fontFamily || 'Plus Jakarta Sans');
-      setBannerStyle(eventToEdit?.theme.bannerStyle || 'gradient');
+      setPrimaryColor(eventToEdit?.theme?.primaryColor || '#0ea5e9');
+      setSecondaryColor(eventToEdit?.theme?.secondaryColor || '#10b981');
+      setFontFamily(eventToEdit?.theme?.fontFamily || 'Plus Jakarta Sans');
+      setBannerStyle(eventToEdit?.theme?.bannerStyle || 'gradient');
       setAttendeeHeadline(eventToEdit?.templateConfig?.attendeeHeadline || "I'M ATTENDING");
       setSpeakerHeadline(eventToEdit?.templateConfig?.speakerHeadline || 'KEYNOTE SPEAKER');
       setExhibitorHeadline(eventToEdit?.templateConfig?.exhibitorHeadline || 'VISIT OUR BOOTH');
@@ -81,26 +81,50 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     if (!isEditing || !slug) setSlug(val.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30));
   };
 
-  const handleFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!eventToEdit?.id) { alert("Please save the event first before uploading custom frames."); return; }
+  // CORRECTED: Converts image to Base64 JSON instead of FormData
+  const handleFrameUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!eventToEdit?.id && !eventToEdit?._id) { 
+      alert("Please save the event first before uploading custom frames."); 
+      return; 
+    }
+    
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('frame', file);
-    formData.append('label', `Custom Frame ${customFrames.length + 1}`);
-
-    try {
-      const res = await fetch(`/api/events/${eventToEdit.id}/frames`, { method: 'POST', body: formData });
-      const updatedFrames = await res.json();
-      setCustomFrames(updatedFrames);
-    } catch (err) { console.error("Frame upload failed", err); }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      if (ev.target?.result) {
+        const base64Url = ev.target.result as string;
+        try {
+          const eventId = eventToEdit.id || eventToEdit._id;
+          const res = await fetch(`http://localhost:5000/api/events/${eventId}/frames`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              url: base64Url, 
+              label: `Custom Frame ${customFrames.length + 1}` 
+            })
+          });
+          
+          if (!res.ok) throw new Error("Backend rejected payload");
+          
+          const updatedFrames = await res.json();
+          setCustomFrames(updatedFrames);
+        } catch (err) {
+          console.error("Frame upload failed", err);
+          alert("Upload failed. Ensure your backend express.json() limit is increased to 50mb.");
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRemoveFrame = async (id: string) => {
-    if (!eventToEdit?.id) return;
+    const eventId = eventToEdit?.id || eventToEdit?._id;
+    if (!eventId) return;
     try {
-      const res = await fetch(`/api/events/${eventToEdit.id}/frames/${id}`, { method: 'DELETE' });
+      const res = await fetch(`http://localhost:5000/api/events/${eventId}/frames/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setCustomFrames(prev => prev.filter(f => f._id !== id && f.id !== id));
       }
@@ -139,7 +163,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           <div className="flex items-center space-x-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600"><Sparkles className="h-5 w-5" /></div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">{isEditing ? `Edit Event: ${eventToEdit?.name}` : 'Create New Event'}</h3>
+              <h3 className="text-base font-bold text-slate-900">{isEditing ? `Edit Event: ${name}` : 'Create New Event'}</h3>
               <p className="text-xs text-slate-500">Configure brand styling and templates</p>
             </div>
           </div>
@@ -190,14 +214,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div><label className="text-xs font-bold text-slate-700 block mb-1">Primary Color</label><div className="flex items-center space-x-2"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono" /></div></div>
                 <div><label className="text-xs font-bold text-slate-700 block mb-1">Secondary Color</label><div className="flex items-center space-x-2"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono" /></div></div>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 block">Default Badge Theme</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[{ id: 'gradient', name: 'Emerald Gradient' }, { id: 'minimal', name: 'Monochrome Slate' }, { id: 'cyber', name: 'Cyber Indigo' }, { id: 'aurora', name: 'Aurora Glow' }, { id: 'executive', name: 'Executive Gold' }].map((preset) => (
-                    <button key={preset.id} type="button" onClick={() => setBannerStyle(preset.id as any)} className={`rounded-xl border p-2.5 text-left text-xs font-semibold transition-all ${bannerStyle === preset.id ? 'border-teal-500 bg-teal-50/60 ring-1 ring-teal-500 text-teal-900' : 'border-slate-200 hover:bg-slate-50 text-slate-700'}`}>{preset.name}</button>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
 
@@ -214,7 +230,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
           {activeTab === 'positioning' && (
             <div className="space-y-4 animate-in fade-in duration-150">
-              <div className="space-y-2"><label className="text-xs font-bold text-slate-700 block">Text Alignment</label><div className="flex items-center space-x-2">{['left', 'center', 'right'].map((align) => (<button key={align} type="button" onClick={() => setAlignment(align as any)} className={`flex-1 rounded-xl border py-2 text-xs font-semibold capitalize transition-all ${alignment === align ? 'border-teal-500 bg-teal-50 text-teal-900 font-bold' : 'border-slate-200 hover:bg-slate-50 text-slate-700'}`}>{align}</button>))}</div></div>
               <div className="space-y-2 pt-2 border-t border-slate-100">
                 <label className="text-xs font-bold text-slate-700 block">Badge Element Display</label>
                 <div className="space-y-2">
@@ -231,7 +246,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">Custom Event Frames</h3>
-                  <p className="text-xs text-slate-500">Upload branded 1080x1080 background templates.</p>
+                  <p className="text-xs text-slate-500">Upload branded 1080x1350 background templates.</p>
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleFrameUpload} accept="image/*" className="hidden" />
                 <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center space-x-1.5 rounded-lg bg-slate-900 text-white px-3 py-1.5 text-xs font-bold hover:bg-black transition-colors">
@@ -242,13 +257,13 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
               {customFrames.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500 text-xs">
-                  No custom frames uploaded yet. Attendees will use standard algorithmic gradients.
+                  No custom frames uploaded yet. Ensure you save the event first before uploading.
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {customFrames.map((frame) => (
                     <div key={frame._id || frame.id} className="relative group rounded-xl border border-slate-200 overflow-hidden bg-slate-100">
-                      <img src={frame.url} alt={frame.label} className="w-full aspect-square object-cover" />
+                      <img src={frame.url} alt={frame.label} className="w-full aspect-[4/5] object-cover" />
                       <button type="button" onClick={() => handleRemoveFrame(frame._id || frame.id!)} className="absolute top-2 right-2 rounded-md bg-rose-500 p-1.5 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
