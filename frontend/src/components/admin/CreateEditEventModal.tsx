@@ -97,7 +97,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         const base64Url = ev.target.result as string;
         try {
           const eventId = eventToEdit.id || eventToEdit._id;
-          const res = await fetch(`http://localhost:5000/api/events/${eventId}/frames`, {
+          const res = await fetch(`/api/events/${eventId}/frames`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -124,7 +124,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     const eventId = eventToEdit?.id || eventToEdit?._id;
     if (!eventId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/events/${eventId}/frames/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/events/${eventId}/frames/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setCustomFrames(prev => prev.filter(f => f._id !== id && f.id !== id));
       }
