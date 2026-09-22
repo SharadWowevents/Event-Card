@@ -9,18 +9,21 @@ const badgeRoutes = require('./routes/badgeRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 
 const app = express();
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+app.use(cors());
+// Middleware
+// Increased body limit to accept high-resolution webcam snapshots (base64 data URIs)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors());
-// Increased body limit to accept high-resolution webcam snapshots (base64 data URIs)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+
 
 // Static directory for uploaded custom frames and photos
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/events', eventRoutes);
