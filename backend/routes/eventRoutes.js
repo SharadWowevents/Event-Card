@@ -5,6 +5,21 @@ const Lead = require('../models/Lead');
 const upload = require('../middleware/upload');
 const Moment = require('../models/Moment');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, framesDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
+    const ext = path.extname(file.originalname) || '.png';
+    cb(null, 'frame_' + uniqueSuffix + ext);
+  }
+});
+const upload = multer({ storage: storage });
 
 // 1. Get all events
 router.get('/', async (req, res) => {
@@ -192,17 +207,27 @@ router.delete('/:id/moments/:momentId', async (req, res) => {
 });
 
 // NEW: Upload a Custom Frame to an Event
-router.post('/:id/frames', async (req, res) => {
+router.post('/:id/frames', upload.single('frameImage'), async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const { url, label } = req.body;
-    event.customFrames.push({ url, label });
-    await event.save();
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file was received by the server' });
+    }
 
+    const label = req.body.label || 'Custom Frame';
+    
+    // UPDATED: Use a clean relative path mapped to the API route
+    const publicUrl = `/api/uploads/frames/${req.file.filename}`;
+
+    // Save to MongoDB
+    event.customFrames.push({ url: publicUrl, label });
+    await event.save();
+    
     res.status(201).json(event.customFrames);
   } catch (err) {
+    console.error("Upload Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
