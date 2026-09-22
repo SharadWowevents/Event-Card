@@ -101,7 +101,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           // FIX: Use relative path or your live domain instead of hardcoded localhost
           const API_BASE = window.location.hostname === 'localhost' 
             ? 'http://localhost:5000/api' 
-            : 'https://eventcard.wowosapps.com/api'; // Use your actual backend URL here
+            : '/api'; // Use your actual backend URL here
 
           const res = await fetch(`${API_BASE}/events/${eventId}/frames`, {
             method: 'POST',
