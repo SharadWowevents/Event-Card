@@ -97,7 +97,13 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         const base64Url = ev.target.result as string;
         try {
           const eventId = eventToEdit.id || eventToEdit._id;
-          const res = await fetch(`/api/events/${eventId}/frames`, {
+          
+          // FIX: Use relative path or your live domain instead of hardcoded localhost
+          const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : 'https://eventcard.wowosapps.com/api'; // Use your actual backend URL here
+
+          const res = await fetch(`${API_BASE}/events/${eventId}/frames`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -112,7 +118,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           setCustomFrames(updatedFrames);
         } catch (err) {
           console.error("Frame upload failed", err);
-          alert("Upload failed. Ensure your backend express.json() limit is increased to 50mb.");
+          alert("Upload failed. Ensure Nginx and Node limits are updated.");
         }
       }
     };
