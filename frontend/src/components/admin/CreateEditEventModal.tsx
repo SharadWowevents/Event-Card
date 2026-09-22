@@ -81,8 +81,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     if (!isEditing || !slug) setSlug(val.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30));
   };
 
-  // CORRECTED: Converts image to Base64 JSON instead of FormData
-  const handleFrameUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // NEW: Uses FormData to stream the file natively
+  const handleFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!eventToEdit?.id && !eventToEdit?._id) { 
       alert("Please save the event first before uploading custom frames."); 
       return; 
@@ -91,39 +91,40 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      if (ev.target?.result) {
-        const base64Url = ev.target.result as string;
-        try {
-          const eventId = eventToEdit.id || eventToEdit._id;
-          
-          // FIX: Use relative path or your live domain instead of hardcoded localhost
-          const API_BASE = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5000/api' 
-            : '/api'; // Use your actual backend URL here
+    try {
+      const eventId = eventToEdit.id || eventToEdit._id;
+      
+      // Use your exact live API domain
+      const API_BASE = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000/api' 
+        : 'https://eventcard.wowosapps.com/api'; 
 
-          const res = await fetch(`${API_BASE}/events/${eventId}/frames`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              url: base64Url, 
-              label: `Custom Frame ${customFrames.length + 1}` 
-            })
-          });
-          
-          if (!res.ok) throw new Error("Backend rejected payload");
-          
-          const updatedFrames = await res.json();
-          setCustomFrames(updatedFrames);
-        } catch (err) {
-          console.error("Frame upload failed", err);
-          alert("Upload failed. Ensure Nginx and Node limits are updated.");
-        }
+      // Package the raw file directly into FormData
+      const formData = new FormData();
+      formData.append('frameImage', file);
+      formData.append('label', `Custom Frame ${customFrames.length + 1}`);
+
+      // Send to backend (Note: Do NOT set Content-Type header; the browser sets it automatically for FormData)
+      const res = await fetch(`${API_BASE}/events/${eventId}/frames`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!res.ok) {
+        // This will extract the exact error text from Nginx or Node if it fails
+        const errorText = await res.text();
+        throw new Error(errorText || "Backend rejected payload");
       }
-    };
-    reader.readAsDataURL(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+      
+      const updatedFrames = await res.json();
+      setCustomFrames(updatedFrames);
+    } catch (err: any) {
+      console.error("Frame upload failed", err);
+      // This will now show you the EXACT error message from the server
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleRemoveFrame = async (id: string) => {
