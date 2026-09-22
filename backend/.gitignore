@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+backend/uploads/
+.env
+node_modules/
+dist/
+build/
+uploads/
