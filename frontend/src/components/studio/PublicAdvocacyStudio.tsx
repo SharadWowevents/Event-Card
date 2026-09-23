@@ -158,11 +158,11 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     return () => clearTimeout(timeoutId);
   }, [step, badge.leadId, event]);
 
-  onst handleCapture = async () => {
+  const handleCapture = async () => {
     if (!videoRef.current) return;
     const video = videoRef.current;
     
-    // Get natural dimensions of the custom frame to maintain exact aspect ratio
+    // 1. Read the exact natural width and height of the uploaded custom frame
     let targetWidth = 1080;
     let targetHeight = 1350;
 
@@ -170,7 +170,10 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       try {
         const img = new Image();
         img.src = badge.customFrameUrl;
-        await new Promise((resolve) => { img.onload = resolve; });
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
         if (img.naturalWidth && img.naturalHeight) {
           targetWidth = img.naturalWidth;
           targetHeight = img.naturalHeight;
@@ -180,6 +183,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       }
     }
 
+    // 2. Set canvas to match the exact proportions of the frame
     const canvas = document.createElement('canvas');
     canvas.width = targetWidth;
     canvas.height = targetHeight;
@@ -193,6 +197,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     const videoWidth = video.videoWidth || 1080;
     const videoHeight = video.videoHeight || 1350;
     
+    // 3. Proportional object-fit "cover" calculation so the video never stretches
     const canvasAspect = targetWidth / targetHeight;
     const videoAspect = videoWidth / videoHeight;
     
