@@ -9,7 +9,7 @@ interface CreateEditEventModalProps {
   onSave: (event: EventItem) => void;
 }
 
-export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: CreateEditEventModalProps) {
+export function PublicAdvocacyStudio({ isOpen, onClose, eventToEdit, onSave }: CreateEditEventModalProps) {
   const isEditing = Boolean(eventToEdit);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
