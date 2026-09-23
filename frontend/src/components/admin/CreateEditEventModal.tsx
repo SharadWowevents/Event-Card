@@ -250,7 +250,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         <div className="flex items-center border-b border-slate-100 bg-slate-50/70 px-6 gap-2 overflow-x-auto whitespace-nowrap">
           <button type="button" onClick={() => setActiveTab('general')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'general' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Info className="h-3.5 w-3.5" /><span>General Info</span></button>
           <button type="button" onClick={() => setActiveTab('brand')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'brand' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Palette className="h-3.5 w-3.5" /><span>Brand & Colors</span></button>
-          <button type="button" onClick={() => setActiveTab('templates')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'templates' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Layout className="h-3.5 w-3.5" /><span>Headlines</span></button>
+          {/* <button type="button" onClick={() => setActiveTab('templates')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'templates' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Layout className="h-3.5 w-3.5" /><span>Headlines</span></button> */}
           <button type="button" onClick={() => setActiveTab('positioning')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'positioning' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Sliders className="h-3.5 w-3.5" /><span>Elements & Preview</span></button>
           <button type="button" onClick={() => setActiveTab('frames')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'frames' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><ImageIcon className="h-3.5 w-3.5" /><span>Custom Frames</span></button>
         </div>
@@ -371,14 +371,14 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
             </div>
           )}
 
-          {activeTab === 'templates' && (
+          {/* {activeTab === 'templates' && (
             <div className="space-y-3 animate-in fade-in duration-150">
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Attendee Headline</span><input type="text" value={attendeeHeadline} onChange={(e) => setAttendeeHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Exhibitor Headline</span><input type="text" value={exhibitorHeadline} onChange={(e) => setExhibitorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Speaker Headline</span><input type="text" value={speakerHeadline} onChange={(e) => setSpeakerHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Sponsor Headline</span><input type="text" value={sponsorHeadline} onChange={(e) => setSponsorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
             </div>
-          )}
+          )} */}
 
           {activeTab === 'positioning' && (
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
