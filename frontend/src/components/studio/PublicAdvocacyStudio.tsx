@@ -162,22 +162,46 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     if (!videoRef.current) return;
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
-    const size = Math.min(video.videoWidth || 640, video.videoHeight || 640);
-    canvas.width = size; canvas.height = size;
+    
+    // We capture the video in a 4:5 aspect ratio (same as 1080x1350)
+    const videoWidth = video.videoWidth || 1080;
+    const videoHeight = video.videoHeight || 1350;
+    
+    // Create a 1080x1350 canvas for the raw selfie
+    canvas.width = 1080;
+    canvas.height = 1350;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.translate(size, 0); ctx.scale(-1, 1);
-    const sx = (video.videoWidth - size) / 2; const sy = (video.videoHeight - size) / 2;
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+    // Flip horizontally for the selfie mirror effect
+    ctx.translate(1080, 0); 
+    ctx.scale(-1, 1);
+    
+    // Calculate aspect ratio crop to fill the 1080x1350 box
+    const canvasAspect = 1080 / 1350;
+    const videoAspect = videoWidth / videoHeight;
+    let sWidth = videoWidth;
+    let sHeight = videoHeight;
+    let sx = 0;
+    let sy = 0;
+
+    if (videoAspect > canvasAspect) {
+      sWidth = videoHeight * canvasAspect;
+      sx = (videoWidth - sWidth) / 2;
+    } else {
+      sHeight = videoWidth / canvasAspect;
+      sy = (videoHeight - sHeight) / 2;
+    }
+
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, 1080, 1350);
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     
-    // 1. INSTANT UI UPDATE: Transition to preview immediately
+    // INSTANT UI UPDATE
     onUpdateBadge({ avatarUrl: dataUrl, scale: 1, panX: 0, panY: 0, rotation: 0 });
     setStep('preview');
     
-    // 2. BACKGROUND UPLOAD: Remove 'await' so the UI doesn't freeze
+    // BACKGROUND UPLOAD
     saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle).catch(console.error);
   };
 
@@ -189,11 +213,8 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       if (ev.target?.result) {
         const dataUrl = ev.target.result as string;
         
-        // 1. INSTANT UI UPDATE
         onUpdateBadge({ avatarUrl: dataUrl, scale: 1, panX: 0, panY: 0, rotation: 0 });
         setStep('preview');
-        
-        // 2. BACKGROUND UPLOAD
         saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle).catch(console.error);
       }
     };
@@ -218,7 +239,6 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       style.backgroundPosition = 'center';
       style.backgroundAttachment = 'fixed';
     } else {
-      // Default to gradient
       style.backgroundImage = `linear-gradient(135deg, ${primaryColor || '#0ea5e9'}, ${secondaryColor || '#10b981'})`;
     }
 
@@ -226,10 +246,8 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
   };
 
   return (
-    // UPDATED: Removed hardcoded bg-slate-50/60 and applied dynamic style
     <div className="flex flex-col items-center" style={getBackgroundStyle()}>
       
-      {/* Semi-transparent navbar so the background bleeds through nicely */}
       <div className="sticky top-0 z-40 w-full border-b border-white/20 bg-white/80 backdrop-blur-md shadow-xs">
         <div className="mx-auto flex min-h-[64px] max-w-2xl items-center justify-between px-4 sm:px-6 py-2 gap-4">
           <div className="flex flex-col">
@@ -268,7 +286,6 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       <div className="flex-1 w-full flex flex-col items-center justify-center p-4 sm:p-6 py-8 relative z-10">
         
         {step === 'details' && (
-          // Added backdrop-blur to the form card so it looks premium over images
           <div className="w-full max-w-lg rounded-2xl border border-white/40 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
             <div 
               className="px-6 py-8 text-center text-white"
@@ -345,24 +362,21 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
             <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl text-center space-y-6">
               <div><h2 className="text-xl font-extrabold text-slate-900">Snap Your Selfie</h2></div>
 
+              {/* DYNAMIC LAYERED CAMERA VIEWFINDER (4:5 Aspect Ratio) */}
               <div 
-                className="relative mx-auto aspect-[4/5] w-full max-w-sm rounded-3xl p-6 flex flex-col items-center justify-center shadow-inner overflow-hidden"
-                style={!badge.customFrameUrl ? { background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` } : {}}
+                className="relative mx-auto aspect-[4/5] w-full max-w-sm rounded-3xl shadow-inner overflow-hidden border border-slate-200 bg-slate-900"
               >
-                {badge.customFrameUrl && <img src={badge.customFrameUrl} alt="Custom Frame" className="absolute inset-0 w-full h-full object-cover z-0 opacity-40" />}
-                <div className="absolute top-6 left-0 right-0 text-center z-20"><span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider">{event.name}</span></div>
-                
-                <div className="w-56 h-56 sm:w-64 sm:h-64 rounded-full overflow-hidden border-4 border-white/25 shadow-2xl flex items-center justify-center bg-slate-900/50 z-10 relative">
+                {/* 1. LAYER ONE: LIVE CAMERA FEED (Base Layer) */}
+                <div className="absolute inset-0 z-0">
                   {isCameraLoading ? (
-                    <div className="text-white flex flex-col items-center justify-center">
+                    <div className="h-full text-white flex flex-col items-center justify-center">
                       <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                      <span className="text-xs font-bold">Starting Camera...</span>
+                      <span className="text-[10px] font-bold">Starting...</span>
                     </div>
                   ) : cameraError ? (
-                    <div className="text-white px-4 text-center">
-                      <AlertCircle className="h-8 w-8 mx-auto mb-2 text-rose-400" />
-                      <p className="text-sm font-semibold">Camera Unavailable</p>
-                      <p className="text-[10px] mt-1 opacity-70">Check browser permissions</p>
+                    <div className="h-full text-white flex flex-col items-center justify-center px-4 text-center">
+                      <AlertCircle className="h-6 w-6 mx-auto mb-1 text-rose-400" />
+                      <p className="text-xs font-semibold">Error</p>
                     </div>
                   ) : (
                     <video 
@@ -375,7 +389,20 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
                   )}
                 </div>
 
-                <div className="absolute bottom-6 left-0 right-0 text-center text-white px-4 z-20"><h3 className="text-2xl font-extrabold truncate drop-shadow-md">{badge.name || 'Your Name'}</h3></div>
+                {/* 2. LAYER TWO: CUSTOM FRAME WITH CUTOUT HOLE (Top Layer) */}
+                {badge.customFrameUrl ? (
+                  <img 
+                    src={badge.customFrameUrl} 
+                    alt="Custom Frame Overlay" 
+                    className="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none drop-shadow-xl" 
+                  />
+                ) : (
+                  // Fallback gradient if no frame is selected
+                  <div 
+                    className="absolute inset-0 z-20 pointer-events-none opacity-50"
+                    style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` }}
+                  />
+                )}
               </div>
 
               {hasCustomFrames && (
@@ -422,7 +449,6 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
               <button onClick={() => setStep('camera')} className="inline-flex items-center space-x-1.5 text-sm font-bold text-slate-700 hover:text-slate-900"><ArrowLeft className="h-4 w-4" /><span>Retake Photo</span></button>
               <button onClick={() => setStep('details')} className="inline-flex items-center space-x-1.5 text-sm font-bold" style={{ color: event.theme?.primaryColor || '#0d9488' }}><span>Edit Details</span></button>
             </div>
-            {/* Wrapped canvas preview in a clean shadow box */}
             <div className="rounded-3xl shadow-2xl overflow-hidden border border-white/20 bg-white">
                <BadgeCanvasPreview badge={badge} event={event} onUpdateBadge={onUpdateBadge} onOpenShareModal={() => setShareModalOpen(true)} canvasRef={canvasRef} />
             </div>
