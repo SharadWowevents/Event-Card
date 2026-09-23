@@ -33,7 +33,8 @@ export function Header({
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
-              <Sparkles className="h-5 w-5" />
+              <img src='logo.png' className="h-5 w-5"/>
+              {/* <Sparkles className="h-5 w-5" /> */}
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-lg tracking-tight text-slate-900 leading-none">EventCards</span>
