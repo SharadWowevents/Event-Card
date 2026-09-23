@@ -359,7 +359,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                         lineHeight: 1
                       }}
                     >
-                      Sharad Bansal
+                      Full Name
                     </div>
 
                     {/* Dynamic Subtext */}
@@ -375,7 +375,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                         lineHeight: 1
                       }}
                     >
-                      Attendee • Developer • Web
+                      Event Role • Job Title • Company
                     </div>
 
                     {/* Bottom Elements (Venue/Date) */}
