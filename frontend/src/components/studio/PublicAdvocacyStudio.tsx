@@ -316,51 +316,77 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
             <form onSubmit={(e) => { e.preventDefault(); setStep('camera'); }} className="p-6 sm:p-8 space-y-5">
               
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><User className="h-3.5 w-3.5" /><span>Full Name *</span></label>
-                <input required type="text" value={badge.name} onChange={(e) => onUpdateBadge({ name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /><span>Email Address *</span></label>
-                <input required type="email" value={badge.email} onChange={(e) => onUpdateBadge({ email: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /><span>Mobile Number *</span></label>
-                <input required type="tel" value={badge.mobile} onChange={(e) => onUpdateBadge({ mobile: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /><span>Event Role *</span></label>
-                <select 
-                  required 
-                  value={badge.role || ""} 
-                  onChange={(e) => onUpdateBadge({ role: e.target.value as any })} 
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors cursor-pointer"
-                >
-                  <option value="" disabled>Select a role...</option>
-                  <option value="attendee">Attendee</option>
-                  <option value="speaker">Speaker</option>
-                  <option value="exhibitor">Exhibitor</option>
-                  <option value="sponsor">Sponsor</option>
-                </select>
-              </div>
+              {/* Load config or fallback to defaults */}
+              {(() => {
+                const config = event.templateConfig?.formSetup || {
+                  name: { show: true, required: true },
+                  email: { show: true, required: false },
+                  mobile: { show: false, required: false },
+                  company: { show: true, required: true },
+                  title: { show: false, required: false },
+                  role: { show: false, required: false },
+                  customQuote: { show: false, required: false }
+                };
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" /><span>Job Title *</span></label>
-                <input required type="text" value={badge.title} onChange={(e) => onUpdateBadge({ title: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Building className="h-3.5 w-3.5" /><span>Company *</span></label>
-                <input required type="text" value={badge.company} onChange={(e) => onUpdateBadge({ company: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /><span>Quote (Optional)</span></label>
-                <textarea rows={2} value={badge.customQuote || ''} onChange={(e) => onUpdateBadge({ customQuote: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden resize-none transition-colors" />
-              </div>
+                return (
+                  <>
+                    {config.name?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><User className="h-3.5 w-3.5" /><span>Full Name {config.name.required && '*'}</span></label>
+                        <input required={config.name.required} type="text" value={badge.name} onChange={(e) => onUpdateBadge({ name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
+                      </div>
+                    )}
+                    
+                    {config.email?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /><span>Email Address {config.email.required && '*'}</span></label>
+                        <input required={config.email.required} type="email" value={badge.email} onChange={(e) => onUpdateBadge({ email: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
+                      </div>
+                    )}
+                    
+                    {config.mobile?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /><span>Mobile Number {config.mobile.required && '*'}</span></label>
+                        <input required={config.mobile.required} type="tel" value={badge.mobile} onChange={(e) => onUpdateBadge({ mobile: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
+                      </div>
+                    )}
+                    
+                    {config.role?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /><span>Event Role {config.role.required && '*'}</span></label>
+                        <select required={config.role.required} value={badge.role || ""} onChange={(e) => onUpdateBadge({ role: e.target.value as any })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors cursor-pointer">
+                          <option value="" disabled>Select a role...</option>
+                          <option value="attendee">Attendee</option>
+                          <option value="speaker">Speaker</option>
+                          <option value="exhibitor">Exhibitor</option>
+                          <option value="sponsor">Sponsor</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {config.title?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" /><span>Job Title {config.title.required && '*'}</span></label>
+                        <input required={config.title.required} type="text" value={badge.title} onChange={(e) => onUpdateBadge({ title: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
+                      </div>
+                    )}
+                    
+                    {config.company?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Building className="h-3.5 w-3.5" /><span>Company {config.company.required && '*'}</span></label>
+                        <input required={config.company.required} type="text" value={badge.company} onChange={(e) => onUpdateBadge({ company: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
+                      </div>
+                    )}
+                    
+                    {config.customQuote?.show && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /><span>Quote {config.customQuote.required && '*'}</span></label>
+                        <textarea required={config.customQuote.required} rows={2} value={badge.customQuote || ''} onChange={(e) => onUpdateBadge({ customQuote: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden resize-none transition-colors" />
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               
               <button 
                 type="submit" 

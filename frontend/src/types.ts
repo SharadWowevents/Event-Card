@@ -47,6 +47,15 @@ export interface EventTemplateConfig {
     size: number;
     borderRadius: number;
   };
+  formSetup?: {
+    name: { show: boolean; required: boolean };
+    email: { show: boolean; required: boolean };
+    mobile: { show: boolean; required: boolean };
+    company: { show: boolean; required: boolean };
+    title: { show: boolean; required: boolean };
+    role: { show: boolean; required: boolean };
+    customQuote: { show: boolean; required: boolean };
+  };
 }
 
 export interface EventItem {

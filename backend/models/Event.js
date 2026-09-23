@@ -62,12 +62,22 @@ const eventSchema = new mongoose.Schema(
         subTextY: { type: Number, default: 1210 }
       },
       selfiePositioning: {
-      shape: { type: String, enum: ['circle', 'square'], default: 'circle' },
-      x: { type: Number, default: 540 },
-      y: { type: Number, default: 595 },
-      size: { type: Number, default: 560 },
-      borderRadius: { type: Number, default: 0 }
-    }
+        shape: { type: String, enum: ['circle', 'square'], default: 'circle' },
+        x: { type: Number, default: 540 },
+        y: { type: Number, default: 595 },
+        size: { type: Number, default: 560 },
+        borderRadius: { type: Number, default: 0 }
+      },
+      // Inside backend/models/Event.js, inside templateConfig:
+      formSetup: {
+        name: { show: { type: Boolean, default: true }, required: { type: Boolean, default: true } },
+        email: { show: { type: Boolean, default: true }, required: { type: Boolean, default: false } },
+        mobile: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } },
+        company: { show: { type: Boolean, default: true }, required: { type: Boolean, default: true } },
+        title: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } },
+        role: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } },
+        customQuote: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } }
+      }
     },
     sponsors: [sponsorSchema],
     customFrames: [customFrameSchema]
