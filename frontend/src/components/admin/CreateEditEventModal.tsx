@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Sparkles, Palette, Layout, Sliders, Info, Calendar, MapPin, Image as ImageIcon, Upload, Trash2, Plus } from 'lucide-react';
+import { X, Save, Sparkles, Palette, Sliders, Info, Calendar, MapPin, Image as ImageIcon, Upload, Trash2, Plus } from 'lucide-react';
 import { EventItem } from '../../types';
 
 interface CreateEditEventModalProps {
@@ -43,7 +43,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [bgColor, setBgColor] = useState('#0f172a');
   const [bgImageUrl, setBgImageUrl] = useState('');
 
-  // 100% DYNAMIC FORM BUILDER STATE
+  // 100% BLANK DYNAMIC FORM STATE
   const [formFields, setFormFields] = useState<any[]>([]);
 
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
@@ -79,8 +79,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
       setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
 
+      // Load dynamic fields
       setFormFields(eventToEdit?.templateConfig?.formFields || []);
-
       setCustomFrames(eventToEdit?.customFrames || []);
 
       const defaultStart = new Date();
@@ -149,7 +149,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     } catch (err) { console.error(err); }
   };
 
-  // --- DYNAMIC FORM FIELD LOGIC ---
   const addField = () => {
     setFormFields([...formFields, { id: `field_${Date.now()}`, label: '', type: 'text', maxLength: 50, show: true, required: false }]);
   };
@@ -157,14 +156,13 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const updateField = (index: number, key: string, value: any) => {
     const updated = [...formFields];
     updated[index][key] = value;
-    if (key === 'show' && value === false) updated[index].required = false; // Auto un-require if hidden
+    if (key === 'show' && value === false) updated[index].required = false; 
     setFormFields(updated);
   };
 
   const removeField = (index: number) => {
     setFormFields(formFields.filter((_, i) => i !== index));
   };
-  // ---------------------------------
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,7 +185,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       templateConfig: {
         attendeeHeadline: '', speakerHeadline: '', exhibitorHeadline: '', sponsorHeadline: '', overlayStyle: 'card',
         textPositioning: { textColor: '#ffffff', alignment, showQrCode, showVenue, showDate, nameFontSize, nameColor, nameUseGradient, nameY, subTextFontSize, subTextColor, subTextY },
-        formFields // Save dynamic form fields to database
+        formFields // Only saving our dynamic fields
       },
       sponsors: eventToEdit?.sponsors || [], customFrames
     };
@@ -234,7 +232,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 flex items-center justify-between"><span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-slate-400" /> Venue Address</span></label><input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Moscone Center, SF" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm" /></div>
               </div>
 
-              {/* DYNAMIC FORM BUILDER COMPONENT */}
+              {/* DYNAMIC FORM BUILDER */}
               <div className="space-y-4 p-5 rounded-xl border border-slate-200 bg-slate-50">
                 <div className="flex justify-between items-center">
                   <div>
@@ -398,8 +396,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
                 <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 bg-slate-900 pointer-events-none">
                   <div className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left" style={{ transform: `scale(${300 / 1080})`, background: customFrames.length > 0 ? `url(${customFrames[0].url}) center/cover` : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, fontFamily: fontFamily }}>
-                    <div className="absolute w-full px-20" style={{ top: `${nameY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: nameUseGradient ? 'transparent' : nameColor, backgroundImage: nameUseGradient ? `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` : 'none', WebkitBackgroundClip: nameUseGradient ? 'text' : 'border-box', lineHeight: 1 }}>Full Name</div>
-                    <div className="absolute w-full px-20" style={{ top: `${subTextY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${subTextFontSize}px`, fontWeight: '600', color: subTextColor, lineHeight: 1 }}>Event Role • Job Title • Company</div>
+                    <div className="absolute w-full px-20" style={{ top: `${nameY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: nameUseGradient ? 'transparent' : nameColor, backgroundImage: nameUseGradient ? `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` : 'none', WebkitBackgroundClip: nameUseGradient ? 'text' : 'border-box', lineHeight: 1 }}>Dynamic Field 1</div>
+                    <div className="absolute w-full px-20" style={{ top: `${subTextY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${subTextFontSize}px`, fontWeight: '600', color: subTextColor, lineHeight: 1 }}>Dynamic Field 2</div>
                     {(showVenue || showDate) && (<div className="absolute bottom-[60px] w-full text-center text-[28px] font-semibold text-white/90">{[showDate && dates ? `📅 ${dates}` : '', showVenue && (venue || location) ? `📍 ${venue || location}` : ''].filter(Boolean).join('   •   ')}</div>)}
                     {showQrCode && (<div className="absolute top-[50px] right-[50px] w-[110px] h-[110px] bg-white rounded-[12px] flex items-center justify-center"><div className="w-[85%] h-[85%] border-[3px] border-slate-900 rounded-sm opacity-90 relative"><div className="absolute top-1 left-1 w-3 h-3 bg-slate-900"></div><div className="absolute top-1 right-1 w-3 h-3 bg-slate-900"></div><div className="absolute bottom-1 left-1 w-3 h-3 bg-slate-900"></div><div className="absolute bottom-1 right-1 w-5 h-5 bg-slate-900"></div></div></div>)}
                   </div>
