@@ -163,21 +163,17 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
     
-    // We capture the video in a 4:5 aspect ratio (same as 1080x1350)
     const videoWidth = video.videoWidth || 1080;
     const videoHeight = video.videoHeight || 1350;
     
-    // Create a 1080x1350 canvas for the raw selfie
     canvas.width = 1080;
     canvas.height = 1350;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Flip horizontally for the selfie mirror effect
     ctx.translate(1080, 0); 
     ctx.scale(-1, 1);
     
-    // Calculate aspect ratio crop to fill the 1080x1350 box
     const canvasAspect = 1080 / 1350;
     const videoAspect = videoWidth / videoHeight;
     let sWidth = videoWidth;
@@ -197,11 +193,8 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     
-    // INSTANT UI UPDATE
     onUpdateBadge({ avatarUrl: dataUrl, scale: 1, panX: 0, panY: 0, rotation: 0 });
     setStep('preview');
-    
-    // BACKGROUND UPLOAD
     saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle).catch(console.error);
   };
 
@@ -362,11 +355,10 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
             <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl text-center space-y-6">
               <div><h2 className="text-xl font-extrabold text-slate-900">Snap Your Selfie</h2></div>
 
-              {/* DYNAMIC LAYERED CAMERA VIEWFINDER (4:5 Aspect Ratio) */}
-              <div 
-                className="relative mx-auto aspect-[4/5] w-full max-w-sm rounded-3xl shadow-inner overflow-hidden border border-slate-200 bg-slate-900"
-              >
-                {/* 1. LAYER ONE: LIVE CAMERA FEED (Base Layer) */}
+              {/* FULLY FLUID CONTAINER: Sized exactly to the image's intrinsic shape */}
+              <div className="relative mx-auto w-full max-w-md rounded-3xl shadow-inner overflow-hidden border border-slate-200 bg-slate-900">
+                
+                {/* LAYER ONE: LIVE CAMERA FEED */}
                 <div className="absolute inset-0 z-0">
                   {isCameraLoading ? (
                     <div className="h-full text-white flex flex-col items-center justify-center">
@@ -389,17 +381,16 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
                   )}
                 </div>
 
-                {/* 2. LAYER TWO: CUSTOM FRAME WITH CUTOUT HOLE (Top Layer) */}
+                {/* LAYER TWO: CUSTOM FRAME (Controls the height of the box!) */}
                 {badge.customFrameUrl ? (
                   <img 
                     src={badge.customFrameUrl} 
                     alt="Custom Frame Overlay" 
-                    className="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none drop-shadow-xl" 
+                    className="relative z-20 w-full h-auto pointer-events-none drop-shadow-xl block" 
                   />
                 ) : (
-                  // Fallback gradient if no frame is selected
                   <div 
-                    className="absolute inset-0 z-20 pointer-events-none opacity-50"
+                    className="relative z-20 w-full aspect-[4/5] pointer-events-none opacity-50"
                     style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` }}
                   />
                 )}
