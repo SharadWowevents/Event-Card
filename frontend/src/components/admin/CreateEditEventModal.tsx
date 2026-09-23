@@ -51,13 +51,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [bgColor, setBgColor] = useState('#0f172a');
   const [bgImageUrl, setBgImageUrl] = useState('');
 
-  // Selfie Mask States
-  const [selfieShape, setSelfieShape] = useState<'circle' | 'square'>('circle');
-  const [selfieX, setSelfieX] = useState(540);
-  const [selfieY, setSelfieY] = useState(595);
-  const [selfieSize, setSelfieSize] = useState(560);
-  const [selfieBorderRadius, setSelfieBorderRadius] = useState(0);
-
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'brand' | 'templates' | 'positioning' | 'frames'>('general');
 
@@ -96,12 +89,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setBgType(eventToEdit?.theme?.backgroundType || 'gradient');
       setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
       setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
-
-      setSelfieShape(eventToEdit?.templateConfig?.selfiePositioning?.shape || 'circle');
-      setSelfieX(eventToEdit?.templateConfig?.selfiePositioning?.x ?? 540);
-      setSelfieY(eventToEdit?.templateConfig?.selfiePositioning?.y ?? 595);
-      setSelfieSize(eventToEdit?.templateConfig?.selfiePositioning?.size ?? 560);
-      setSelfieBorderRadius(eventToEdit?.templateConfig?.selfiePositioning?.borderRadius ?? 0);
 
       setCustomFrames(eventToEdit?.customFrames || []);
 
@@ -168,14 +155,14 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
 
       const formData = new FormData();
-      formData.append('backgroundImage', file); // Must match multer .single('backgroundImage')
+      formData.append('backgroundImage', file);
 
       const res = await fetch(`${API_BASE}/events/${eventId}/background`, { method: 'POST', body: formData });
       if (!res.ok) throw new Error(await res.text());
 
       const data = await res.json();
       setBgImageUrl(data.url);
-      setBgType('image'); // Auto-switch to image mode
+      setBgType('image');
     } catch (err: any) {
       alert(`Upload failed: ${err.message}`);
     }
@@ -217,9 +204,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           textColor: '#ffffff', alignment, showQrCode, showVenue, showDate,
           nameFontSize, nameColor, nameUseGradient, nameY,
           subTextFontSize, subTextColor, subTextY
-        },
-        selfiePositioning: {
-          shape: selfieShape, x: selfieX, y: selfieY, size: selfieSize, borderRadius: selfieBorderRadius
         }
       },
       sponsors: eventToEdit?.sponsors || [],
@@ -250,7 +234,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         <div className="flex items-center border-b border-slate-100 bg-slate-50/70 px-6 gap-2 overflow-x-auto whitespace-nowrap">
           <button type="button" onClick={() => setActiveTab('general')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'general' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Info className="h-3.5 w-3.5" /><span>General Info</span></button>
           <button type="button" onClick={() => setActiveTab('brand')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'brand' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Palette className="h-3.5 w-3.5" /><span>Brand & Colors</span></button>
-          {/* <button type="button" onClick={() => setActiveTab('templates')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'templates' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Layout className="h-3.5 w-3.5" /><span>Headlines</span></button> */}
           <button type="button" onClick={() => setActiveTab('positioning')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'positioning' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Sliders className="h-3.5 w-3.5" /><span>Elements & Preview</span></button>
           <button type="button" onClick={() => setActiveTab('frames')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'frames' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><ImageIcon className="h-3.5 w-3.5" /><span>Custom Frames</span></button>
         </div>
@@ -274,10 +257,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           {activeTab === 'brand' && (
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
 
-              {/* LEFT: Controls Panel */}
               <div className="flex-1 space-y-6">
-
-                {/* Brand Colors */}
                 <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Brand Accent Colors</h4>
                   <div className="grid grid-cols-2 gap-4">
@@ -298,7 +278,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </div>
                 </div>
 
-                {/* Page Background */}
                 <div className="space-y-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Page Background</h4>
 
@@ -333,7 +312,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 </div>
               </div>
 
-              {/* RIGHT: Live Page Preview */}
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Attendee Page Preview</span>
 
@@ -371,22 +349,11 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
             </div>
           )}
 
-          {/* {activeTab === 'templates' && (
-            <div className="space-y-3 animate-in fade-in duration-150">
-              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Attendee Headline</span><input type="text" value={attendeeHeadline} onChange={(e) => setAttendeeHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
-              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Exhibitor Headline</span><input type="text" value={exhibitorHeadline} onChange={(e) => setExhibitorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
-              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Speaker Headline</span><input type="text" value={speakerHeadline} onChange={(e) => setSpeakerHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
-              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Sponsor Headline</span><input type="text" value={sponsorHeadline} onChange={(e) => setSponsorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
-            </div>
-          )} */}
-
           {activeTab === 'positioning' && (
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
 
-              {/* LEFT: Controls Panel */}
               <div className="flex-1 space-y-6">
 
-                {/* Font Family & Alignment */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Primary Font Family</label>
@@ -413,7 +380,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </div>
                 </div>
 
-                {/* Attendee Name Typography */}
                 <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Name Styling</h4>
                   <div className="grid grid-cols-2 gap-4">
@@ -438,7 +404,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </div>
                 </div>
 
-                {/* Subtext Typography */}
                 <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Role & Company Styling</h4>
                   <div className="grid grid-cols-2 gap-4">
@@ -457,38 +422,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </div>
                 </div>
 
-                {/* Selfie Mask Positioning */}
-                <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 mt-4">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Selfie Mask Setup</h4>
-
-                  <div className="flex bg-slate-200/60 p-1 rounded-xl mb-4">
-                    <button type="button" onClick={() => setSelfieShape('circle')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${selfieShape === 'circle' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Circle</button>
-                    <button type="button" onClick={() => setSelfieShape('square')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${selfieShape === 'square' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Square / Rectangle</button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">X-Position (Left/Right: {selfieX})</label>
-                      <input type="range" min="0" max="1080" value={selfieX} onChange={(e) => setSelfieX(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position (Up/Down: {selfieY})</label>
-                      <input type="range" min="0" max="1350" value={selfieY} onChange={(e) => setSelfieY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Total Size ({selfieSize}px)</label>
-                      <input type="range" min="200" max="1000" value={selfieSize} onChange={(e) => setSelfieSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                    {selfieShape === 'square' && (
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Corner Radius ({selfieBorderRadius}px)</label>
-                        <input type="range" min="0" max={selfieSize / 2} value={selfieBorderRadius} onChange={(e) => setSelfieBorderRadius(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Badge Element Toggles */}
                 <div className="space-y-2 pt-2 border-t border-slate-200">
                   <label className="text-xs font-bold text-slate-700 block">Badge Element Display</label>
                   <div className="space-y-2">
@@ -499,7 +432,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 </div>
               </div>
 
-              {/* RIGHT: Live Visual Preview */}
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
 
@@ -513,27 +445,11 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     }}
                   >
 
-                    {/* DYNAMIC Fake Selfie Area */}
-                    <div
-                      className="absolute bg-black/40 border-[12px] border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-75"
-                      style={{
-                        left: `${selfieX}px`,
-                        top: `${selfieY}px`,
-                        width: `${selfieSize}px`,
-                        height: `${selfieSize}px`,
-                        transform: 'translate(-50%, -50%)', // Keeps the X/Y dead center!
-                        borderRadius: selfieShape === 'circle' ? '50%' : `${selfieBorderRadius}px`
-                      }}
-                    >
-                      <span className="text-white/60 text-4xl font-bold tracking-widest uppercase">Selfie</span>
-                    </div>
-
-                    {/* Dynamic Name */}
                     <div
                       className="absolute w-full px-20"
                       style={{
                         top: `${nameY}px`,
-                        transform: 'translateY(-80%)', // Approximates canvas baseline alignment
+                        transform: 'translateY(-80%)',
                         textAlign: alignment,
                         fontSize: `${nameFontSize}px`,
                         fontWeight: 'bold',
@@ -546,7 +462,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                       Full Name
                     </div>
 
-                    {/* Dynamic Subtext */}
                     <div
                       className="absolute w-full px-20"
                       style={{
@@ -562,14 +477,12 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                       Event Role • Job Title • Company
                     </div>
 
-                    {/* Bottom Elements (Venue/Date) */}
                     {(showVenue || showDate) && (
                       <div className="absolute bottom-[60px] w-full text-center text-[28px] font-semibold text-white/90">
                         {[showDate && dates ? `📅 ${dates}` : '', showVenue && (venue || location) ? `📍 ${venue || location}` : ''].filter(Boolean).join('   •   ')}
                       </div>
                     )}
 
-                    {/* Fake QR Code */}
                     {showQrCode && (
                       <div className="absolute top-[50px] right-[50px] w-[110px] h-[110px] bg-white rounded-[12px] flex items-center justify-center">
                         <div className="w-[85%] h-[85%] border-[3px] border-slate-900 rounded-sm opacity-90 relative">
