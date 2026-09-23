@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Sparkles, Palette, Layout, Sliders, Info, Calendar, MapPin, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
+import { X, Save, Sparkles, Palette, Layout, Sliders, Info, Calendar, MapPin, Image as ImageIcon, Upload, Trash2, Plus } from 'lucide-react';
 import { EventItem } from '../../types';
 
 interface CreateEditEventModalProps {
@@ -8,16 +8,6 @@ interface CreateEditEventModalProps {
   eventToEdit: EventItem | null;
   onSave: (event: EventItem) => void;
 }
-
-const DEFAULT_FORM_SETUP = {
-  name: { show: true, required: true },
-  email: { show: true, required: false },
-  mobile: { show: false, required: false },
-  company: { show: true, required: true },
-  title: { show: false, required: false },
-  role: { show: false, required: false },
-  customQuote: { show: false, required: false }
-};
 
 export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: CreateEditEventModalProps) {
   const isEditing = Boolean(eventToEdit);
@@ -53,7 +43,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [bgColor, setBgColor] = useState('#0f172a');
   const [bgImageUrl, setBgImageUrl] = useState('');
 
-  const [formSetup, setFormSetup] = useState(DEFAULT_FORM_SETUP);
+  // 100% DYNAMIC FORM BUILDER STATE
+  const [formFields, setFormFields] = useState<any[]>([]);
 
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'brand' | 'positioning' | 'frames'>('general');
@@ -63,9 +54,9 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setName(eventToEdit?.name || '');
       setSlug(eventToEdit?.slug || '');
       setTagline(eventToEdit?.tagline || '');
-      setDates(eventToEdit?.dates || 'October 14–16, 2026');
-      setVenue(eventToEdit?.venue || 'Moscone West Convention Center');
-      setLocation(eventToEdit?.location || 'San Francisco, CA');
+      setDates(eventToEdit?.dates || '');
+      setVenue(eventToEdit?.venue || '');
+      setLocation(eventToEdit?.location || '');
       setStatus(eventToEdit?.status || 'active');
       setPrimaryColor(eventToEdit?.theme?.primaryColor || '#0ea5e9');
       setSecondaryColor(eventToEdit?.theme?.secondaryColor || '#10b981');
@@ -88,7 +79,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
       setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
 
-      setFormSetup(eventToEdit?.templateConfig?.formSetup || DEFAULT_FORM_SETUP);
+      setFormFields(eventToEdit?.templateConfig?.formFields || []);
 
       setCustomFrames(eventToEdit?.customFrames || []);
 
@@ -158,14 +149,22 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     } catch (err) { console.error(err); }
   };
 
-  const toggleFormField = (field: keyof typeof formSetup, prop: 'show' | 'required', value: boolean) => {
-    setFormSetup(prev => {
-      const updated = { ...prev, [field]: { ...prev[field], [prop]: value } };
-      // If setting show to false, also set required to false
-      if (prop === 'show' && !value) updated[field].required = false;
-      return updated;
-    });
+  // --- DYNAMIC FORM FIELD LOGIC ---
+  const addField = () => {
+    setFormFields([...formFields, { id: `field_${Date.now()}`, label: '', type: 'text', maxLength: 50, show: true, required: false }]);
   };
+
+  const updateField = (index: number, key: string, value: any) => {
+    const updated = [...formFields];
+    updated[index][key] = value;
+    if (key === 'show' && value === false) updated[index].required = false; // Auto un-require if hidden
+    setFormFields(updated);
+  };
+
+  const removeField = (index: number) => {
+    setFormFields(formFields.filter((_, i) => i !== index));
+  };
+  // ---------------------------------
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +187,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       templateConfig: {
         attendeeHeadline: '', speakerHeadline: '', exhibitorHeadline: '', sponsorHeadline: '', overlayStyle: 'card',
         textPositioning: { textColor: '#ffffff', alignment, showQrCode, showVenue, showDate, nameFontSize, nameColor, nameUseGradient, nameY, subTextFontSize, subTextColor, subTextY },
-        formSetup // Inject the form configuration into the template config
+        formFields // Save dynamic form fields to database
       },
       sponsors: eventToEdit?.sponsors || [], customFrames
     };
@@ -235,33 +234,67 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 flex items-center justify-between"><span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-slate-400" /> Venue Address</span></label><input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Moscone Center, SF" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm" /></div>
               </div>
 
-              {/* DYNAMIC FORM BUILDER */}
-              <div className="space-y-3 p-5 rounded-xl border border-slate-200 bg-slate-50">
-                <div className="mb-4">
-                  <h4 className="text-sm font-bold text-slate-800">Attendee Form Builder</h4>
-                  <p className="text-xs text-slate-500">Toggle which fields attendees must fill out before generating their badge.</p>
+              {/* DYNAMIC FORM BUILDER COMPONENT */}
+              <div className="space-y-4 p-5 rounded-xl border border-slate-200 bg-slate-50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">Custom Form Builder</h4>
+                    <p className="text-xs text-slate-500">Create exactly the input fields you need for your attendees.</p>
+                  </div>
+                  <button type="button" onClick={addField} className="flex items-center gap-1 bg-teal-600 hover:bg-teal-700 transition-colors text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
+                    <Plus className="w-3.5 h-3.5" /> Add Input
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {Object.entries(formSetup).map(([key, config]) => {
-                    const labelMap: Record<string, string> = { name: "Full Name", email: "Email Address", mobile: "Mobile Number", company: "Company", title: "Job Title", role: "Event Role", customQuote: "Custom Quote" };
-                    return (
-                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200 shadow-sm">
-                        <span className="text-xs font-bold text-slate-700">{labelMap[key]}</span>
-                        <div className="flex items-center gap-4">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" checked={config.show} onChange={(e) => toggleFormField(key as any, 'show', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase">Show</span>
-                          </label>
-                          <label className={`flex items-center gap-1.5 ${!config.show ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
-                            <input type="checkbox" checked={config.required} disabled={!config.show} onChange={(e) => toggleFormField(key as any, 'required', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase">Req</span>
-                          </label>
-                        </div>
+
+                <div className="space-y-3">
+                  {formFields.map((field, index) => (
+                    <div key={field.id} className="flex flex-wrap sm:flex-nowrap items-end gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm">
+                      
+                      <div className="flex-1 space-y-1 min-w-[150px]">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Column Name</label>
+                        <input type="text" required value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} placeholder="e.g. Employee Code" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" />
                       </div>
-                    );
-                  })}
+                      
+                      <div className="w-[110px] space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Data Type</label>
+                        <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden">
+                          <option value="text">Text</option>
+                          <option value="email">Email</option>
+                          <option value="tel">Phone</option>
+                          <option value="number">Number</option>
+                        </select>
+                      </div>
+
+                      <div className="w-[80px] space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Length</label>
+                        <input type="number" required min="1" value={field.maxLength} onChange={(e) => updateField(index, 'maxLength', Number(e.target.value))} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" />
+                      </div>
+
+                      <div className="flex items-center gap-3 px-3 h-[30px] border-l border-slate-200">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" checked={field.show} onChange={(e) => updateField(index, 'show', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" />
+                          <span className="text-[10px] font-bold text-slate-600 uppercase">Show</span>
+                        </label>
+                        <label className={`flex items-center gap-1.5 ${!field.show ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}>
+                          <input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" />
+                          <span className="text-[10px] font-bold text-slate-600 uppercase">Req</span>
+                        </label>
+                      </div>
+
+                      <button type="button" onClick={() => removeField(index)} className="h-[30px] w-[30px] flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {formFields.length === 0 && (
+                    <div className="text-center py-8 text-xs text-slate-500 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50">
+                      No columns defined. Click "+ Add Input" to start building your form.
+                    </div>
+                  )}
                 </div>
               </div>
+
             </div>
           )}
 
