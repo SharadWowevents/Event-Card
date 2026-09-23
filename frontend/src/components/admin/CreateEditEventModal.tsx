@@ -218,8 +218,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           nameFontSize, nameColor, nameUseGradient, nameY,
           subTextFontSize, subTextColor, subTextY
         },
-        selfiePositioning: { 
-          shape: selfieShape, x: selfieX, y: selfieY, size: selfieSize, borderRadius: selfieBorderRadius 
+        selfiePositioning: {
+          shape: selfieShape, x: selfieX, y: selfieY, size: selfieSize, borderRadius: selfieBorderRadius
         }
       },
       sponsors: eventToEdit?.sponsors || [],
@@ -460,7 +460,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 {/* Selfie Mask Positioning */}
                 <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 mt-4">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Selfie Mask Setup</h4>
-                  
+
                   <div className="flex bg-slate-200/60 p-1 rounded-xl mb-4">
                     <button type="button" onClick={() => setSelfieShape('circle')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${selfieShape === 'circle' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Circle</button>
                     <button type="button" onClick={() => setSelfieShape('square')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${selfieShape === 'square' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Square / Rectangle</button>
@@ -482,7 +482,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     {selfieShape === 'square' && (
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Corner Radius ({selfieBorderRadius}px)</label>
-                        <input type="range" min="0" max={selfieSize/2} value={selfieBorderRadius} onChange={(e) => setSelfieBorderRadius(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                        <input type="range" min="0" max={selfieSize / 2} value={selfieBorderRadius} onChange={(e) => setSelfieBorderRadius(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
                       </div>
                     )}
                   </div>
@@ -512,9 +512,9 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                       fontFamily: fontFamily
                     }}
                   >
-                    
+
                     {/* DYNAMIC Fake Selfie Area */}
-                    <div 
+                    <div
                       className="absolute bg-black/40 border-[12px] border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-75"
                       style={{
                         left: `${selfieX}px`,
