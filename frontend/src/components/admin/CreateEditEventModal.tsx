@@ -31,7 +31,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [speakerHeadline, setSpeakerHeadline] = useState('KEYNOTE SPEAKER');
   const [exhibitorHeadline, setExhibitorHeadline] = useState('VISIT OUR BOOTH');
   const [sponsorHeadline, setSponsorHeadline] = useState('PROUD SPONSOR');
-  
+
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center');
   const [showQrCode, setShowQrCode] = useState(true);
   const [showVenue, setShowVenue] = useState(true);
@@ -45,6 +45,11 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [subTextFontSize, setSubTextFontSize] = useState(36);
   const [subTextColor, setSubTextColor] = useState('#e2e8f0');
   const [subTextY, setSubTextY] = useState(1210);
+
+  // NEW: Background States
+  const [bgType, setBgType] = useState<'color' | 'gradient' | 'image'>('gradient');
+  const [bgColor, setBgColor] = useState('#0f172a');
+  const [bgImageUrl, setBgImageUrl] = useState('');
 
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'brand' | 'templates' | 'positioning' | 'frames'>('general');
@@ -62,17 +67,17 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setPrimaryColor(eventToEdit?.theme?.primaryColor || '#0ea5e9');
       setSecondaryColor(eventToEdit?.theme?.secondaryColor || '#10b981');
       setFontFamily(eventToEdit?.theme?.fontFamily || 'Plus Jakarta Sans');
-      
+
       setAttendeeHeadline(eventToEdit?.templateConfig?.attendeeHeadline || "I'M ATTENDING");
       setSpeakerHeadline(eventToEdit?.templateConfig?.speakerHeadline || 'KEYNOTE SPEAKER');
       setExhibitorHeadline(eventToEdit?.templateConfig?.exhibitorHeadline || 'VISIT OUR BOOTH');
       setSponsorHeadline(eventToEdit?.templateConfig?.sponsorHeadline || 'PROUD SPONSOR');
-      
+
       setAlignment(eventToEdit?.templateConfig?.textPositioning?.alignment || 'center');
       setShowQrCode(eventToEdit?.templateConfig?.textPositioning?.showQrCode ?? true);
       setShowVenue(eventToEdit?.templateConfig?.textPositioning?.showVenue ?? true);
       setShowDate(eventToEdit?.templateConfig?.textPositioning?.showDate ?? true);
-      
+
       setNameFontSize(eventToEdit?.templateConfig?.textPositioning?.nameFontSize ?? 80);
       setNameColor(eventToEdit?.templateConfig?.textPositioning?.nameColor || '#ffffff');
       setNameUseGradient(eventToEdit?.templateConfig?.textPositioning?.nameUseGradient ?? false);
@@ -81,12 +86,16 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setSubTextColor(eventToEdit?.templateConfig?.textPositioning?.subTextColor || '#e2e8f0');
       setSubTextY(eventToEdit?.templateConfig?.textPositioning?.subTextY ?? 1210);
 
+      setBgType(eventToEdit?.theme?.backgroundType || 'gradient');
+      setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
+      setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
+
       setCustomFrames(eventToEdit?.customFrames || []);
-      
+
       const defaultStart = new Date();
       defaultStart.setDate(defaultStart.getDate() + 1);
-      const startIso = eventToEdit?.startDate 
-        ? new Date(eventToEdit.startDate).toISOString().slice(0, 16) 
+      const startIso = eventToEdit?.startDate
+        ? new Date(eventToEdit.startDate).toISOString().slice(0, 16)
         : defaultStart.toISOString().slice(0, 16);
       setStartDate(startIso);
 
@@ -100,29 +109,29 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   };
 
   const handleFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!eventToEdit?.id && !eventToEdit?._id) { 
-      alert("Please save the event first before uploading custom frames."); 
-      return; 
+    if (!eventToEdit?.id && !eventToEdit?._id) {
+      alert("Please save the event first before uploading custom frames.");
+      return;
     }
-    
+
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       const eventId = eventToEdit.id || eventToEdit._id;
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api'; 
+      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
 
       const formData = new FormData();
       formData.append('frameImage', file);
       formData.append('label', `Custom Frame ${customFrames.length + 1}`);
 
       const res = await fetch(`${API_BASE}/events/${eventId}/frames`, { method: 'POST', body: formData });
-      
+
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText || "Backend rejected payload");
       }
-      
+
       const updatedFrames = await res.json();
       setCustomFrames(updatedFrames);
     } catch (err: any) {
@@ -130,6 +139,32 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       alert(`Upload failed: ${err.message}`);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!eventToEdit?.id && !eventToEdit?._id) {
+      alert("Please save the event first before uploading a background image.");
+      return;
+    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const eventId = eventToEdit.id || eventToEdit._id;
+      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+
+      const formData = new FormData();
+      formData.append('backgroundImage', file); // Must match multer .single('backgroundImage')
+
+      const res = await fetch(`${API_BASE}/events/${eventId}/background`, { method: 'POST', body: formData });
+      if (!res.ok) throw new Error(await res.text());
+
+      const data = await res.json();
+      setBgImageUrl(data.url);
+      setBgType('image'); // Auto-switch to image mode
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
     }
   };
 
@@ -157,14 +192,19 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       postersCount: eventToEdit ? eventToEdit.postersCount : 0,
       sharesCount: eventToEdit ? eventToEdit.sharesCount : 0,
       emvValue: eventToEdit ? eventToEdit.emvValue : 0,
-      theme: { primaryColor, secondaryColor, accentColor: primaryColor, gradient: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`, fontFamily, bannerStyle: 'custom' },
-      templateConfig: { 
-        attendeeHeadline, speakerHeadline, exhibitorHeadline, sponsorHeadline, overlayStyle: 'card', 
-        textPositioning: { 
+      theme: {
+        primaryColor, secondaryColor, accentColor: primaryColor,
+        gradient: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
+        fontFamily, bannerStyle: 'custom',
+        backgroundType: bgType, backgroundColor: bgColor, backgroundImageUrl: bgImageUrl
+      },
+      templateConfig: {
+        attendeeHeadline, speakerHeadline, exhibitorHeadline, sponsorHeadline, overlayStyle: 'card',
+        textPositioning: {
           textColor: '#ffffff', alignment, showQrCode, showVenue, showDate,
           nameFontSize, nameColor, nameUseGradient, nameY,
           subTextFontSize, subTextColor, subTextY
-        } 
+        }
       },
       sponsors: eventToEdit?.sponsors || [],
       customFrames
@@ -179,7 +219,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
       <div className={`relative w-full rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 ${activeTab === 'positioning' ? 'max-w-5xl' : 'max-w-3xl'}`}>
-        
+
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div className="flex items-center space-x-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600"><Sparkles className="h-5 w-5" /></div>
@@ -200,7 +240,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         </div>
 
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
-          
+
           {/* OMITTED TABS TO SAVE SPACE (General, Brand, Templates, Frames remain exactly the same) */}
           {activeTab === 'general' && (
             <div className="space-y-4 animate-in fade-in duration-150">
@@ -217,9 +257,104 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           )}
 
           {activeTab === 'brand' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in duration-150">
-              <div><label className="text-xs font-bold text-slate-700 block mb-1">Primary Color</label><div className="flex items-center space-x-2"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono" /></div></div>
-              <div><label className="text-xs font-bold text-slate-700 block mb-1">Secondary Color</label><div className="flex items-center space-x-2"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono" /></div></div>
+            <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
+
+              {/* LEFT: Controls Panel */}
+              <div className="flex-1 space-y-6">
+
+                {/* Brand Colors */}
+                <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Brand Accent Colors</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Primary Color</label>
+                      <div className="flex items-center space-x-2">
+                        <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                        <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Secondary Color</label>
+                      <div className="flex items-center space-x-2">
+                        <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                        <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Page Background */}
+                <div className="space-y-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Page Background</h4>
+
+                  <div className="flex bg-slate-200/60 p-1 rounded-xl">
+                    <button type="button" onClick={() => setBgType('color')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'color' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Solid Color</button>
+                    <button type="button" onClick={() => setBgType('gradient')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'gradient' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Brand Gradient</button>
+                    <button type="button" onClick={() => setBgType('image')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'image' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Custom Image</button>
+                  </div>
+
+                  {bgType === 'color' && (
+                    <div className="flex items-center gap-3 pt-2 animate-in fade-in">
+                      <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-10 w-14 rounded-lg cursor-pointer" />
+                      <span className="text-sm font-semibold text-slate-700">Select solid background color</span>
+                    </div>
+                  )}
+
+                  {bgType === 'gradient' && (
+                    <div className="pt-2 text-xs text-slate-500 font-medium animate-in fade-in">
+                      The page background will use a smooth gradient flowing from your Primary Color to your Secondary Color.
+                    </div>
+                  )}
+
+                  {bgType === 'image' && (
+                    <div className="pt-2 animate-in fade-in">
+                      <input type="file" id="bgUpload" onChange={handleBackgroundUpload} accept="image/*" className="hidden" />
+                      <label htmlFor="bgUpload" className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-slate-300 rounded-xl p-4 cursor-pointer hover:bg-slate-100 transition-colors">
+                        <Upload className="w-5 h-5 text-slate-400" />
+                        <span className="text-sm font-bold text-slate-600">{bgImageUrl ? 'Replace Background Image' : 'Upload Background Image'}</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT: Live Page Preview */}
+              <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Attendee Page Preview</span>
+
+                <div
+                  className="relative w-[300px] h-[375px] rounded-[1.5rem] shadow-xl border-4 border-slate-900 overflow-hidden flex items-center justify-center transition-all duration-300"
+                  style={{
+                    backgroundColor: bgType === 'color' ? bgColor : undefined,
+                    backgroundImage: bgType === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : bgType === 'image' && bgImageUrl ? `url(${bgImageUrl})` : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    fontFamily: fontFamily
+                  }}
+                >
+                  {/* Fake UI Overlay to show contrast */}
+                  <div className="absolute top-4 left-4 right-4 flex justify-between items-center opacity-80">
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm"></div>
+                    <div className="w-16 h-2 rounded bg-white/30 backdrop-blur-sm"></div>
+                  </div>
+
+                  {/* Fake Registration Card */}
+                  <div className="w-[85%] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-5 text-center">
+                    <div className="w-12 h-12 rounded-xl mx-auto mb-3" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}></div>
+                    <h5 className="font-bold text-slate-900 text-sm mb-1">{name || 'Event Name'}</h5>
+                    <p className="text-[10px] text-slate-500 mb-4">{dates || 'Event Dates'}</p>
+
+                    <div className="space-y-2">
+                      <div className="h-6 w-full bg-slate-100 rounded-md border border-slate-200"></div>
+                      <div className="h-6 w-full bg-slate-100 rounded-md border border-slate-200"></div>
+                      <div className="h-7 w-full rounded-md mt-4 text-white text-[10px] font-bold flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
+                        Get My Badge
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -235,10 +370,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           {/* ======================================= */}
           {activeTab === 'positioning' && (
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
-              
+
               {/* LEFT: Controls Panel */}
               <div className="flex-1 space-y-6">
-                
+
                 {/* Font Family & Alignment */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
@@ -324,16 +459,16 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               {/* RIGHT: Live Visual Preview */}
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
-                
+
                 {/* 
                   This box uses CSS scaling magic. It holds a virtual 1080x1350 canvas 
                   but scales it down precisely to fit in this 300px sidebar. 
                   This means the Y-slider coordinates match 1-to-1 perfectly!
                 */}
                 <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 bg-slate-900 pointer-events-none">
-                  <div 
+                  <div
                     className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left"
-                    style={{ 
+                    style={{
                       transform: `scale(${300 / 1080})`,
                       background: customFrames.length > 0 ? `url(${customFrames[0].url}) center/cover` : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
                       fontFamily: fontFamily
@@ -345,10 +480,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     </div>
 
                     {/* Dynamic Name */}
-                    <div 
+                    <div
                       className="absolute w-full px-20"
-                      style={{ 
-                        top: `${nameY}px`, 
+                      style={{
+                        top: `${nameY}px`,
                         transform: 'translateY(-80%)', // Approximates canvas baseline alignment
                         textAlign: alignment,
                         fontSize: `${nameFontSize}px`,
@@ -363,10 +498,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     </div>
 
                     {/* Dynamic Subtext */}
-                    <div 
+                    <div
                       className="absolute w-full px-20"
-                      style={{ 
-                        top: `${subTextY}px`, 
+                      style={{
+                        top: `${subTextY}px`,
                         transform: 'translateY(-80%)',
                         textAlign: alignment,
                         fontSize: `${subTextFontSize}px`,
@@ -389,10 +524,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     {showQrCode && (
                       <div className="absolute top-[50px] right-[50px] w-[110px] h-[110px] bg-white rounded-[12px] flex items-center justify-center">
                         <div className="w-[85%] h-[85%] border-[3px] border-slate-900 rounded-sm opacity-90 relative">
-                           <div className="absolute top-1 left-1 w-3 h-3 bg-slate-900"></div>
-                           <div className="absolute top-1 right-1 w-3 h-3 bg-slate-900"></div>
-                           <div className="absolute bottom-1 left-1 w-3 h-3 bg-slate-900"></div>
-                           <div className="absolute bottom-1 right-1 w-5 h-5 bg-slate-900"></div>
+                          <div className="absolute top-1 left-1 w-3 h-3 bg-slate-900"></div>
+                          <div className="absolute top-1 right-1 w-3 h-3 bg-slate-900"></div>
+                          <div className="absolute bottom-1 left-1 w-3 h-3 bg-slate-900"></div>
+                          <div className="absolute bottom-1 right-1 w-5 h-5 bg-slate-900"></div>
                         </div>
                       </div>
                     )}

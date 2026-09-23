@@ -32,7 +32,10 @@ const eventSchema = new mongoose.Schema(
       accentColor: { type: String, default: '#0ea5e9' },
       gradient: { type: String, default: 'linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)' },
       fontFamily: { type: String, default: 'Plus Jakarta Sans' },
-      bannerStyle: { type: String, default: 'gradient' }
+      bannerStyle: { type: String, default: 'gradient' },
+      backgroundType: { type: String, enum: ['color', 'gradient', 'image'], default: 'gradient' },
+      backgroundColor: { type: String, default: '#0f172a' },
+      backgroundImageUrl: { type: String, default: '' }
     },
     templateConfig: {
       attendeeHeadline: { type: String, default: "I'M ATTENDING" },

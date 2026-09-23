@@ -25,6 +25,19 @@ const frameStorage = multer.diskStorage({
 });
 const frameUpload = multer({ storage: frameStorage });
 
+const bgDir = path.join(__dirname, '../uploads/backgrounds');
+if (!fs.existsSync(bgDir)) fs.mkdirSync(bgDir, { recursive: true });
+
+const bgStorage = multer.diskStorage({
+  destination: function (req, file, cb) { cb(null, bgDir); },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, 'bg_' + uniqueSuffix + ext);
+  }
+});
+const bgUpload = multer({ storage: bgStorage });
+
 // B. Event Moments Setup
 const momentsDir = path.join(__dirname, '../uploads/moments');
 if (!fs.existsSync(momentsDir)) fs.mkdirSync(momentsDir, { recursive: true });
@@ -242,6 +255,27 @@ router.delete('/:id/moments/:momentId', async (req, res) => {
     await Moment.findByIdAndDelete(req.params.momentId);
     res.json({ success: true, message: 'Moment deleted' });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload Attendee Page Background Image
+router.post('/:id/background', bgUpload.single('backgroundImage'), async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!req.file) return res.status(400).json({ error: 'No image file received' });
+
+    const publicUrl = `/api/uploads/backgrounds/${req.file.filename}`;
+
+    if (!event.theme) event.theme = {};
+    event.theme.backgroundImageUrl = publicUrl;
+    event.theme.backgroundType = 'image';
+
+    await event.save();
+    res.status(201).json({ url: publicUrl });
+  } catch (err) {
+    console.error("BG Upload Error:", err);
     res.status(500).json({ error: err.message });
   }
 });

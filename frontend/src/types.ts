@@ -57,6 +57,7 @@ export interface EventItem {
   postersCount: number;
   sharesCount: number;
   emvValue: number;
+  
   theme: {
     primaryColor: string;
     secondaryColor: string;
@@ -64,6 +65,9 @@ export interface EventItem {
     gradient: string;
     fontFamily: string;
     bannerStyle: 'gradient' | 'minimal' | 'cyber' | 'aurora' | 'executive' | 'custom';
+    backgroundType?: 'color' | 'gradient' | 'image';
+    backgroundColor?: string;
+    backgroundImageUrl?: string;
   };
   templateConfig: any;
   sponsors: any[];
