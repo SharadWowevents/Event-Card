@@ -361,7 +361,9 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           {activeTab === 'templates' && (
             <div className="space-y-3 animate-in fade-in duration-150">
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Attendee Headline</span><input type="text" value={attendeeHeadline} onChange={(e) => setAttendeeHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
+              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Exhibitor Headline</span><input type="text" value={exhibitorHeadline} onChange={(e) => setExhibitorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Speaker Headline</span><input type="text" value={speakerHeadline} onChange={(e) => setSpeakerHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
+              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Sponser Headline</span><input type="text" value={sponsorHeadline} onChange={(e) => setSpeakerHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
             </div>
           )}
 
