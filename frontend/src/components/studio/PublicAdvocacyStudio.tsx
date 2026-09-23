@@ -158,24 +158,44 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     return () => clearTimeout(timeoutId);
   }, [step, badge.leadId, event]);
 
-  const handleCapture = async () => {
+  onst handleCapture = async () => {
     if (!videoRef.current) return;
     const video = videoRef.current;
+    
+    // Get natural dimensions of the custom frame to maintain exact aspect ratio
+    let targetWidth = 1080;
+    let targetHeight = 1350;
+
+    if (badge.customFrameUrl) {
+      try {
+        const img = new Image();
+        img.src = badge.customFrameUrl;
+        await new Promise((resolve) => { img.onload = resolve; });
+        if (img.naturalWidth && img.naturalHeight) {
+          targetWidth = img.naturalWidth;
+          targetHeight = img.naturalHeight;
+        }
+      } catch (e) {
+        console.error("Could not read frame dimensions", e);
+      }
+    }
+
     const canvas = document.createElement('canvas');
-    
-    const videoWidth = video.videoWidth || 1080;
-    const videoHeight = video.videoHeight || 1350;
-    
-    canvas.width = 1080;
-    canvas.height = 1350;
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.translate(1080, 0); 
+    // Flip horizontally for mirror effect
+    ctx.translate(targetWidth, 0); 
     ctx.scale(-1, 1);
+
+    const videoWidth = video.videoWidth || 1080;
+    const videoHeight = video.videoHeight || 1350;
     
-    const canvasAspect = 1080 / 1350;
+    const canvasAspect = targetWidth / targetHeight;
     const videoAspect = videoWidth / videoHeight;
+    
     let sWidth = videoWidth;
     let sHeight = videoHeight;
     let sx = 0;
@@ -189,7 +209,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       sy = (videoHeight - sHeight) / 2;
     }
 
-    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, 1080, 1350);
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     

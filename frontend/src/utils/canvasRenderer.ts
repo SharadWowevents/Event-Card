@@ -17,7 +17,7 @@ export const renderBadgeToCanvas = async (
 ) => {
   await document.fonts.ready;
 
-  // 1. LOAD CUSTOM FRAME FIRST TO GET ITS EXACT NATURAL DIMENSIONS
+  // 1. LOAD CUSTOM FRAME FIRST TO GET EXACT DIMENSIONS
   let frameImg: HTMLImageElement | null = null;
   if (badge.customFrameUrl) {
     try { 
@@ -27,7 +27,6 @@ export const renderBadgeToCanvas = async (
     }
   }
 
-  // 2. ADAPTIVE SIZING: Use the uploaded frame's dimensions, or fallback to standard 1080x1350
   const WIDTH = frameImg ? frameImg.naturalWidth || frameImg.width : 1080;
   const HEIGHT = frameImg ? frameImg.naturalHeight || frameImg.height : 1350;
 
@@ -43,22 +42,37 @@ export const renderBadgeToCanvas = async (
   ctx.fillStyle = grad; 
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // LAYER 2: ATTENDEE PHOTO (Fills the exact dynamic dimensions of the frame)
+  // LAYER 2: ATTENDEE PHOTO (Crops proportionally like object-cover to prevent stretching)
   if (avatarImg) {
-    ctx.drawImage(avatarImg, 0, 0, WIDTH, HEIGHT);
+    const imgAspect = avatarImg.width / avatarImg.height;
+    const canvasAspect = WIDTH / HEIGHT;
+    
+    let drawWidth = WIDTH;
+    let drawHeight = HEIGHT;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (imgAspect > canvasAspect) {
+      drawWidth = HEIGHT * imgAspect;
+      offsetX = (WIDTH - drawWidth) / 2;
+    } else {
+      drawHeight = WIDTH / imgAspect;
+      offsetY = (HEIGHT - drawHeight) / 2;
+    }
+
+    ctx.drawImage(avatarImg, offsetX, offsetY, drawWidth, drawHeight);
   }
 
-  // LAYER 3: CUSTOM FRAME CUTOUT (Overlays perfectly matching its own aspect ratio)
+  // LAYER 3: CUSTOM FRAME CUTOUT (Overlays on top)
   if (frameImg) {
     ctx.drawImage(frameImg, 0, 0, WIDTH, HEIGHT);
   }
 
-  // LAYER 4: TEXT & DYNAMIC QR CODE (Scaled proportionally to the frame size)
+  // LAYER 4: TEXT & DYNAMIC QR CODE
   const textConfig = event.templateConfig?.textPositioning || {};
   const fontFamily = event.theme?.fontFamily || 'Plus Jakarta Sans';
   const align = textConfig.alignment || 'center';
   
-  // Proportional scale factor based on width
   const scaleRatio = WIDTH / 1080;
   
   const nameSize = (textConfig.nameFontSize || 80) * scaleRatio; 
