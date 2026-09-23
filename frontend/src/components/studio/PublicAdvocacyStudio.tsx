@@ -192,27 +192,54 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     reader.readAsDataURL(file);
   };
 
+  const getBackgroundStyle = () => {
+    if (!event.theme) return {};
+    
+    const { backgroundType, backgroundColor, backgroundImageUrl, primaryColor, secondaryColor, fontFamily } = event.theme;
+    
+    let style: React.CSSProperties = {
+      fontFamily: fontFamily || 'Plus Jakarta Sans',
+      minHeight: 'calc(100vh - 4rem)'
+    };
+
+    if (backgroundType === 'color') {
+      style.backgroundColor = backgroundColor || '#0f172a';
+    } else if (backgroundType === 'image' && backgroundImageUrl) {
+      style.backgroundImage = `url(${backgroundImageUrl})`;
+      style.backgroundSize = 'cover';
+      style.backgroundPosition = 'center';
+      style.backgroundAttachment = 'fixed';
+    } else {
+      // Default to gradient
+      style.backgroundImage = `linear-gradient(135deg, ${primaryColor || '#0ea5e9'}, ${secondaryColor || '#10b981'})`;
+    }
+
+    return style;
+  };
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/60 flex flex-col items-center">
+    // UPDATED: Removed hardcoded bg-slate-50/60 and applied dynamic style
+    <div className="flex flex-col items-center" style={getBackgroundStyle()}>
       
-      <div className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
+      {/* Semi-transparent navbar so the background bleeds through nicely */}
+      <div className="sticky top-0 z-40 w-full border-b border-white/20 bg-white/80 backdrop-blur-md shadow-xs">
         <div className="mx-auto flex min-h-[64px] max-w-2xl items-center justify-between px-4 sm:px-6 py-2 gap-4">
           <div className="flex flex-col">
             {!isStarted ? (
               <>
-                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <Clock className="h-3 w-3 text-amber-500" /> Event Starts In
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                  <Clock className="h-3 w-3 text-amber-600" /> Event Starts In
                 </span>
                 <div className="flex items-center gap-1 sm:gap-2 mt-0.5 text-slate-900 font-mono text-sm font-bold">
-                  <div className="bg-slate-100 rounded px-1.5 py-0.5">{timeLeft.days}d</div>
-                  <div className="bg-slate-100 rounded px-1.5 py-0.5">{timeLeft.hours}h</div>
-                  <div className="bg-slate-100 rounded px-1.5 py-0.5">{timeLeft.mins}m</div>
-                  <div className="bg-slate-100 rounded px-1.5 py-0.5 text-amber-600">{timeLeft.secs}s</div>
+                  <div className="bg-slate-200/80 rounded px-1.5 py-0.5">{timeLeft.days}d</div>
+                  <div className="bg-slate-200/80 rounded px-1.5 py-0.5">{timeLeft.hours}h</div>
+                  <div className="bg-slate-200/80 rounded px-1.5 py-0.5">{timeLeft.mins}m</div>
+                  <div className="bg-slate-200/80 rounded px-1.5 py-0.5 text-amber-700">{timeLeft.secs}s</div>
                 </div>
               </>
             ) : (
               <>
-                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Event is Live
                 </span>
                 <span className="font-bold text-slate-900 truncate mt-0.5 max-w-[150px] sm:max-w-[300px] text-sm">
@@ -222,7 +249,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
             )}
           </div>
 
-          <a href={mapsUrl} target="_blank" rel="noreferrer" className={`shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm ${isStarted ? 'bg-sky-600 text-white hover:bg-sky-700 hover:scale-105' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+          <a href={mapsUrl} target="_blank" rel="noreferrer" className={`shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm ${isStarted ? 'bg-slate-900 text-white hover:bg-black hover:scale-105' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {isStarted ? <Navigation className="h-4 w-4" /> : <MapPin className="h-4 w-4 text-slate-400" />}
             <span className="hidden sm:inline">{isStarted ? 'Get Directions' : 'View Venue Map'}</span>
             <span className="sm:hidden">{isStarted ? 'Navigate' : 'Map'}</span>
@@ -230,41 +257,44 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
         </div>
       </div>
 
-      <div className="flex-1 w-full flex flex-col items-center justify-center p-4 sm:p-6 py-8">
+      <div className="flex-1 w-full flex flex-col items-center justify-center p-4 sm:p-6 py-8 relative z-10">
         
         {step === 'details' && (
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200/80 bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-8 text-center text-white">
+          // Added backdrop-blur to the form card so it looks premium over images
+          <div className="w-full max-w-lg rounded-2xl border border-white/40 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+            <div 
+              className="px-6 py-8 text-center text-white"
+              style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` }}
+            >
               <Sparkles className="mx-auto h-8 w-8 opacity-90 mb-3" />
               <h1 className="text-2xl font-extrabold tracking-tight">Join {event.name}</h1>
-              <p className="mt-2 text-sm text-teal-50 font-medium">Create your official attendee badge in seconds.</p>
+              <p className="mt-2 text-sm text-white/90 font-medium">Create your official attendee badge in seconds.</p>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); setStep('camera'); }} className="p-6 sm:p-8 space-y-5">
               
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><User className="h-3.5 w-3.5" /><span>Full Name *</span></label>
-                <input required type="text" value={badge.name} onChange={(e) => onUpdateBadge({ name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden" />
+                <input required type="text" value={badge.name} onChange={(e) => onUpdateBadge({ name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
               </div>
               
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /><span>Email Address *</span></label>
-                <input required type="email" value={badge.email} onChange={(e) => onUpdateBadge({ email: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden" />
+                <input required type="email" value={badge.email} onChange={(e) => onUpdateBadge({ email: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
               </div>
               
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /><span>Mobile Number *</span></label>
-                <input required type="tel" value={badge.mobile} onChange={(e) => onUpdateBadge({ mobile: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden" />
+                <input required type="tel" value={badge.mobile} onChange={(e) => onUpdateBadge({ mobile: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
               </div>
               
-              {/* UPDATED: Blank Required Dropdown */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /><span>Event Role *</span></label>
                 <select 
                   required 
                   value={badge.role || ""} 
                   onChange={(e) => onUpdateBadge({ role: e.target.value as any })} 
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors cursor-pointer"
                 >
                   <option value="" disabled>Select a role...</option>
                   <option value="attendee">Attendee</option>
@@ -276,34 +306,40 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" /><span>Job Title *</span></label>
-                <input required type="text" value={badge.title} onChange={(e) => onUpdateBadge({ title: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden" />
+                <input required type="text" value={badge.title} onChange={(e) => onUpdateBadge({ title: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
               </div>
               
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><Building className="h-3.5 w-3.5" /><span>Company *</span></label>
-                <input required type="text" value={badge.company} onChange={(e) => onUpdateBadge({ company: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden" />
+                <input required type="text" value={badge.company} onChange={(e) => onUpdateBadge({ company: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden transition-colors" />
               </div>
               
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /><span>Quote (Optional)</span></label>
-                <textarea rows={2} value={badge.customQuote || ''} onChange={(e) => onUpdateBadge({ customQuote: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-teal-500 focus:outline-hidden resize-none" />
+                <textarea rows={2} value={badge.customQuote || ''} onChange={(e) => onUpdateBadge({ customQuote: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-slate-900 focus:outline-hidden resize-none transition-colors" />
               </div>
               
-              <button type="submit" className="w-full flex items-center justify-center space-x-2 rounded-xl bg-teal-600 px-5 py-3.5 text-sm font-bold text-white hover:bg-teal-700 transition-all"><Camera className="h-4 w-4" /><span>Next: Capture Selfie</span><ArrowRight className="h-4 w-4" /></button>
+              <button 
+                type="submit" 
+                className="w-full flex items-center justify-center space-x-2 rounded-xl px-5 py-3.5 text-sm font-bold text-white hover:brightness-110 transition-all shadow-md mt-6"
+                style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` }}
+              >
+                <Camera className="h-4 w-4" /><span>Next: Capture Selfie</span><ArrowRight className="h-4 w-4" />
+              </button>
             </form>
           </div>
         )}
 
         {step === 'camera' && (
           <div className="w-full max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <button onClick={() => setStep('details')} className="mb-4 inline-flex items-center space-x-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900"><ArrowLeft className="h-4 w-4" /><span>Back to Details</span></button>
+            <button onClick={() => setStep('details')} className="mb-4 inline-flex items-center space-x-1.5 text-sm font-semibold text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg hover:bg-black/60 transition-colors"><ArrowLeft className="h-4 w-4" /><span>Back to Details</span></button>
             
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-8 shadow-xl text-center space-y-6">
+            <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl text-center space-y-6">
               <div><h2 className="text-xl font-extrabold text-slate-900">Snap Your Selfie</h2></div>
 
               <div 
-                className="relative mx-auto aspect-[4/5] w-full max-w-sm rounded-3xl p-6 flex flex-col items-center justify-center shadow-2xl overflow-hidden"
-                style={!badge.customFrameUrl ? { background: event.theme?.gradient || 'linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)' } : {}}
+                className="relative mx-auto aspect-[4/5] w-full max-w-sm rounded-3xl p-6 flex flex-col items-center justify-center shadow-inner overflow-hidden"
+                style={!badge.customFrameUrl ? { background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` } : {}}
               >
                 {badge.customFrameUrl && <img src={badge.customFrameUrl} alt="Custom Frame" className="absolute inset-0 w-full h-full object-cover z-0 opacity-40" />}
                 <div className="absolute top-6 left-0 right-0 text-center z-20"><span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider">{event.name}</span></div>
@@ -336,13 +372,14 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
               {hasCustomFrames && (
                 <div className="pt-2">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">1. Choose Your Frame</span>
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">1. Choose Your Frame</span>
                   <div className="flex flex-wrap justify-center gap-2">
                     {event.customFrames?.map((frame) => (
                       <button 
                         key={frame.id || frame._id} 
                         onClick={() => onUpdateBadge({ themeStyle: 'custom' as any, customFrameUrl: frame.url })} 
-                        className={`px-3.5 py-2 rounded-full text-xs font-bold ${badge.customFrameUrl === frame.url ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}
+                        className={`px-3.5 py-2 rounded-full text-xs font-bold transition-all ${badge.customFrameUrl === frame.url ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'}`}
+                        style={badge.customFrameUrl === frame.url ? { background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` } : {}}
                       >
                         {frame.label}
                       </button>
@@ -351,9 +388,21 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
                 </div>
               )}
 
-              <div className="pt-4 border-t border-slate-100 space-y-3">
-                <button onClick={handleCapture} disabled={!!cameraError || isCameraLoading} className="w-full flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-3.5 text-sm font-bold text-white disabled:opacity-50 transition-all shadow-md"><Camera className="h-5 w-5" /><span>{hasCustomFrames ? '2. Capture Selfie' : 'Capture Selfie'}</span></button>
-                <div><input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" /><button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center space-x-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-bold hover:bg-slate-50 transition-colors"><Upload className="h-4 w-4" /><span>Upload a Photo Instead</span></button></div>
+              <div className="pt-4 border-t border-slate-200 space-y-3">
+                <button 
+                  onClick={handleCapture} 
+                  disabled={!!cameraError || isCameraLoading} 
+                  className="w-full flex items-center justify-center space-x-2 rounded-xl px-5 py-3.5 text-sm font-bold text-white disabled:opacity-50 transition-all shadow-md"
+                  style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` }}
+                >
+                  <Camera className="h-5 w-5" /><span>{hasCustomFrames ? '2. Capture Selfie' : 'Capture Selfie'}</span>
+                </button>
+                <div>
+                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center space-x-2 rounded-xl border border-slate-300 bg-slate-50 px-5 py-3 text-xs font-bold hover:bg-slate-100 text-slate-700 transition-colors">
+                    <Upload className="h-4 w-4" /><span>Upload a Photo Instead</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -361,11 +410,14 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
         {step === 'preview' && (
           <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={() => setStep('camera')} className="inline-flex items-center space-x-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900"><ArrowLeft className="h-4 w-4" /><span>Retake Photo</span></button>
-              <button onClick={() => setStep('details')} className="inline-flex items-center space-x-1.5 text-sm font-semibold text-teal-600 hover:text-teal-700"><span>Edit Details</span></button>
+            <div className="flex items-center justify-between mb-4 bg-white/80 backdrop-blur-md px-4 py-3 rounded-xl shadow-sm border border-white/40">
+              <button onClick={() => setStep('camera')} className="inline-flex items-center space-x-1.5 text-sm font-bold text-slate-700 hover:text-slate-900"><ArrowLeft className="h-4 w-4" /><span>Retake Photo</span></button>
+              <button onClick={() => setStep('details')} className="inline-flex items-center space-x-1.5 text-sm font-bold" style={{ color: event.theme?.primaryColor || '#0d9488' }}><span>Edit Details</span></button>
             </div>
-            <BadgeCanvasPreview badge={badge} event={event} onUpdateBadge={onUpdateBadge} onOpenShareModal={() => setShareModalOpen(true)} canvasRef={canvasRef} />
+            {/* Wrapped canvas preview in a clean shadow box */}
+            <div className="rounded-3xl shadow-2xl overflow-hidden border border-white/20 bg-white">
+               <BadgeCanvasPreview badge={badge} event={event} onUpdateBadge={onUpdateBadge} onOpenShareModal={() => setShareModalOpen(true)} canvasRef={canvasRef} />
+            </div>
           </div>
         )}
       </div>
