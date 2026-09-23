@@ -77,7 +77,15 @@ const eventSchema = new mongoose.Schema(
         title: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } },
         role: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } },
         customQuote: { show: { type: Boolean, default: false }, required: { type: Boolean, default: false } }
-      }
+      },
+      formFields: [{
+        id: String,
+        label: String,
+        type: String,
+        maxLength: Number,
+        show: { type: Boolean, default: true },
+        required: { type: Boolean, default: false }
+      }]
     },
     sponsors: [sponsorSchema],
     customFrames: [customFrameSchema]
