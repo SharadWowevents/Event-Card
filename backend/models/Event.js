@@ -60,7 +60,14 @@ const eventSchema = new mongoose.Schema(
         subTextFontSize: { type: Number, default: 36 },
         subTextColor: { type: String, default: '#e2e8f0' },
         subTextY: { type: Number, default: 1210 }
-      }
+      },
+      selfiePositioning: {
+      shape: { type: String, enum: ['circle', 'square'], default: 'circle' },
+      x: { type: Number, default: 540 },
+      y: { type: Number, default: 595 },
+      size: { type: Number, default: 560 },
+      borderRadius: { type: Number, default: 0 }
+    }
     },
     sponsors: [sponsorSchema],
     customFrames: [customFrameSchema]

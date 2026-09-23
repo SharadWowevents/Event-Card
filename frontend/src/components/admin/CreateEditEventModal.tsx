@@ -46,10 +46,17 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [subTextColor, setSubTextColor] = useState('#e2e8f0');
   const [subTextY, setSubTextY] = useState(1210);
 
-  // NEW: Background States
+  // Background States
   const [bgType, setBgType] = useState<'color' | 'gradient' | 'image'>('gradient');
   const [bgColor, setBgColor] = useState('#0f172a');
   const [bgImageUrl, setBgImageUrl] = useState('');
+
+  // Selfie Mask States
+  const [selfieShape, setSelfieShape] = useState<'circle' | 'square'>('circle');
+  const [selfieX, setSelfieX] = useState(540);
+  const [selfieY, setSelfieY] = useState(595);
+  const [selfieSize, setSelfieSize] = useState(560);
+  const [selfieBorderRadius, setSelfieBorderRadius] = useState(0);
 
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'brand' | 'templates' | 'positioning' | 'frames'>('general');
@@ -89,6 +96,12 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setBgType(eventToEdit?.theme?.backgroundType || 'gradient');
       setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
       setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
+
+      setSelfieShape(eventToEdit?.templateConfig?.selfiePositioning?.shape || 'circle');
+      setSelfieX(eventToEdit?.templateConfig?.selfiePositioning?.x ?? 540);
+      setSelfieY(eventToEdit?.templateConfig?.selfiePositioning?.y ?? 595);
+      setSelfieSize(eventToEdit?.templateConfig?.selfiePositioning?.size ?? 560);
+      setSelfieBorderRadius(eventToEdit?.templateConfig?.selfiePositioning?.borderRadius ?? 0);
 
       setCustomFrames(eventToEdit?.customFrames || []);
 
@@ -204,6 +217,9 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           textColor: '#ffffff', alignment, showQrCode, showVenue, showDate,
           nameFontSize, nameColor, nameUseGradient, nameY,
           subTextFontSize, subTextColor, subTextY
+        },
+        selfiePositioning: { 
+          shape: selfieShape, x: selfieX, y: selfieY, size: selfieSize, borderRadius: selfieBorderRadius 
         }
       },
       sponsors: eventToEdit?.sponsors || [],
@@ -241,7 +257,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
 
-          {/* OMITTED TABS TO SAVE SPACE (General, Brand, Templates, Frames remain exactly the same) */}
           {activeTab === 'general' && (
             <div className="space-y-4 animate-in fade-in duration-150">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -332,13 +347,11 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     fontFamily: fontFamily
                   }}
                 >
-                  {/* Fake UI Overlay to show contrast */}
                   <div className="absolute top-4 left-4 right-4 flex justify-between items-center opacity-80">
                     <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm"></div>
                     <div className="w-16 h-2 rounded bg-white/30 backdrop-blur-sm"></div>
                   </div>
 
-                  {/* Fake Registration Card */}
                   <div className="w-[85%] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-5 text-center">
                     <div className="w-12 h-12 rounded-xl mx-auto mb-3" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}></div>
                     <h5 className="font-bold text-slate-900 text-sm mb-1">{name || 'Event Name'}</h5>
@@ -363,13 +376,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Attendee Headline</span><input type="text" value={attendeeHeadline} onChange={(e) => setAttendeeHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Exhibitor Headline</span><input type="text" value={exhibitorHeadline} onChange={(e) => setExhibitorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
               <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Speaker Headline</span><input type="text" value={speakerHeadline} onChange={(e) => setSpeakerHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
-              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Sponser Headline</span><input type="text" value={sponsorHeadline} onChange={(e) => setSpeakerHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
+              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 space-y-1"><span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Sponsor Headline</span><input type="text" value={sponsorHeadline} onChange={(e) => setSponsorHeadline(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold" /></div>
             </div>
           )}
 
-          {/* ======================================= */}
-          {/* FULLY UPDATED POSITIONING & LIVE PREVIEW */}
-          {/* ======================================= */}
           {activeTab === 'positioning' && (
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
 
@@ -447,6 +457,37 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </div>
                 </div>
 
+                {/* Selfie Mask Positioning */}
+                <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 mt-4">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Selfie Mask Setup</h4>
+                  
+                  <div className="flex bg-slate-200/60 p-1 rounded-xl mb-4">
+                    <button type="button" onClick={() => setSelfieShape('circle')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${selfieShape === 'circle' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Circle</button>
+                    <button type="button" onClick={() => setSelfieShape('square')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${selfieShape === 'square' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Square / Rectangle</button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">X-Position (Left/Right: {selfieX})</label>
+                      <input type="range" min="0" max="1080" value={selfieX} onChange={(e) => setSelfieX(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position (Up/Down: {selfieY})</label>
+                      <input type="range" min="0" max="1350" value={selfieY} onChange={(e) => setSelfieY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">Total Size ({selfieSize}px)</label>
+                      <input type="range" min="200" max="1000" value={selfieSize} onChange={(e) => setSelfieSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                    </div>
+                    {selfieShape === 'square' && (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Corner Radius ({selfieBorderRadius}px)</label>
+                        <input type="range" min="0" max={selfieSize/2} value={selfieBorderRadius} onChange={(e) => setSelfieBorderRadius(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Badge Element Toggles */}
                 <div className="space-y-2 pt-2 border-t border-slate-200">
                   <label className="text-xs font-bold text-slate-700 block">Badge Element Display</label>
@@ -462,11 +503,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
 
-                {/* 
-                  This box uses CSS scaling magic. It holds a virtual 1080x1350 canvas 
-                  but scales it down precisely to fit in this 300px sidebar. 
-                  This means the Y-slider coordinates match 1-to-1 perfectly!
-                */}
                 <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 bg-slate-900 pointer-events-none">
                   <div
                     className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left"
@@ -476,8 +512,19 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                       fontFamily: fontFamily
                     }}
                   >
-                    {/* Fake Selfie Circle */}
-                    <div className="absolute left-1/2 top-[calc(1350px/2-80px)] w-[560px] h-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/40 border-[12px] border-white/20 backdrop-blur-md flex items-center justify-center">
+                    
+                    {/* DYNAMIC Fake Selfie Area */}
+                    <div 
+                      className="absolute bg-black/40 border-[12px] border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-75"
+                      style={{
+                        left: `${selfieX}px`,
+                        top: `${selfieY}px`,
+                        width: `${selfieSize}px`,
+                        height: `${selfieSize}px`,
+                        transform: 'translate(-50%, -50%)', // Keeps the X/Y dead center!
+                        borderRadius: selfieShape === 'circle' ? '50%' : `${selfieBorderRadius}px`
+                      }}
+                    >
                       <span className="text-white/60 text-4xl font-bold tracking-widest uppercase">Selfie</span>
                     </div>
 

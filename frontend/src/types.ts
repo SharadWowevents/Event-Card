@@ -40,6 +40,13 @@ export interface EventTemplateConfig {
   sponsorHeadline: string;
   overlayStyle: 'card' | 'banner-bottom' | 'pill-badge' | 'glass-card';
   textPositioning: TextPositioning;
+  selfiePositioning?: {
+    shape: 'circle' | 'square';
+    x: number;
+    y: number;
+    size: number;
+    borderRadius: number;
+  };
 }
 
 export interface EventItem {

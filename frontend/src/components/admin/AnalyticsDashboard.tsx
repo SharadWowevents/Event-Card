@@ -202,7 +202,7 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
         
         {/* ROW 1: Timeline Graph & Role Mix */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
           
           {/* Live Timeline SVG Chart */}
           <div className="lg:col-span-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
