@@ -32,7 +32,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [speakerHeadline, setSpeakerHeadline] = useState('KEYNOTE SPEAKER');
   const [exhibitorHeadline, setExhibitorHeadline] = useState('VISIT OUR BOOTH');
   const [sponsorHeadline, setSponsorHeadline] = useState('PROUD SPONSOR');
-  
+
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center');
   const [showQrCode, setShowQrCode] = useState(true);
   const [showVenue, setShowVenue] = useState(true);
@@ -40,6 +40,15 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'brand' | 'templates' | 'positioning' | 'frames'>('general');
+
+  // NEW: Typography States
+  const [nameFontSize, setNameFontSize] = useState(80);
+  const [nameColor, setNameColor] = useState('#ffffff');
+  const [nameUseGradient, setNameUseGradient] = useState(false);
+  const [nameY, setNameY] = useState(1130);
+  const [subTextFontSize, setSubTextFontSize] = useState(36);
+  const [subTextColor, setSubTextColor] = useState('#e2e8f0');
+  const [subTextY, setSubTextY] = useState(1210);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,11 +73,18 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setShowVenue(eventToEdit?.templateConfig?.textPositioning?.showVenue ?? true);
       setShowDate(eventToEdit?.templateConfig?.textPositioning?.showDate ?? true);
       setCustomFrames(eventToEdit?.customFrames || []);
-      
+      setNameFontSize(eventToEdit?.templateConfig?.textPositioning?.nameFontSize ?? 80);
+      setNameColor(eventToEdit?.templateConfig?.textPositioning?.nameColor || '#ffffff');
+      setNameUseGradient(eventToEdit?.templateConfig?.textPositioning?.nameUseGradient ?? false);
+      setNameY(eventToEdit?.templateConfig?.textPositioning?.nameY ?? 1130);
+      setSubTextFontSize(eventToEdit?.templateConfig?.textPositioning?.subTextFontSize ?? 36);
+      setSubTextColor(eventToEdit?.templateConfig?.textPositioning?.subTextColor || '#e2e8f0');
+      setSubTextY(eventToEdit?.templateConfig?.textPositioning?.subTextY ?? 1210);
+
       const defaultStart = new Date();
       defaultStart.setDate(defaultStart.getDate() + 1);
-      const startIso = eventToEdit?.startDate 
-        ? new Date(eventToEdit.startDate).toISOString().slice(0, 16) 
+      const startIso = eventToEdit?.startDate
+        ? new Date(eventToEdit.startDate).toISOString().slice(0, 16)
         : defaultStart.toISOString().slice(0, 16);
       setStartDate(startIso);
 
@@ -83,21 +99,21 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
   // NEW: Uses FormData to stream the file natively
   const handleFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!eventToEdit?.id && !eventToEdit?._id) { 
-      alert("Please save the event first before uploading custom frames."); 
-      return; 
+    if (!eventToEdit?.id && !eventToEdit?._id) {
+      alert("Please save the event first before uploading custom frames.");
+      return;
     }
-    
+
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       const eventId = eventToEdit.id || eventToEdit._id;
-      
+
       // Use your exact live API domain
-      const API_BASE = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000/api' 
-        : 'https://eventcard.wowosapps.com/api'; 
+      const API_BASE = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api'
+        : 'https://eventcard.wowosapps.com/api';
 
       // Package the raw file directly into FormData
       const formData = new FormData();
@@ -109,13 +125,13 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         method: 'POST',
         body: formData
       });
-      
+
       if (!res.ok) {
         // This will extract the exact error text from Nginx or Node if it fails
         const errorText = await res.text();
         throw new Error(errorText || "Backend rejected payload");
       }
-      
+
       const updatedFrames = await res.json();
       setCustomFrames(updatedFrames);
     } catch (err: any) {
@@ -151,8 +167,14 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       sharesCount: eventToEdit ? eventToEdit.sharesCount : 0,
       emvValue: eventToEdit ? eventToEdit.emvValue : 0,
       theme: { primaryColor, secondaryColor, accentColor: primaryColor, gradient: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`, fontFamily, bannerStyle },
-      templateConfig: { attendeeHeadline, speakerHeadline, exhibitorHeadline, sponsorHeadline, overlayStyle: 'card', textPositioning: { nameY: 820, titleY: 875, companyY: 920, roleBadgeY: 760, textColor: '#ffffff', alignment, showQrCode, showVenue, showDate } },
-      sponsors: eventToEdit?.sponsors || [],
+      templateConfig: {
+        attendeeHeadline, speakerHeadline, exhibitorHeadline, sponsorHeadline, overlayStyle: 'card',
+        textPositioning: {
+          textColor: '#ffffff', alignment, showQrCode, showVenue, showDate,
+          nameFontSize, nameColor, nameUseGradient, nameY,
+          subTextFontSize, subTextColor, subTextY
+        }
+      },
       customFrames
     };
 
@@ -165,7 +187,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-        
+
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div className="flex items-center space-x-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600"><Sparkles className="h-5 w-5" /></div>
@@ -186,7 +208,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         </div>
 
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
-          
+
           {activeTab === 'general' && (
             <div className="space-y-4 animate-in fade-in duration-150">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -194,10 +216,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Brand Slug</label><input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs font-semibold" /></div>
                 <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Status</label><select value={status} onChange={(e) => setStatus(e.target.value as EventItem['status'])} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs font-semibold text-slate-800"><option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option></select></div>
                 <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700">Tagline / Theme</label><input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm" /></div>
-                
+
                 <div className="space-y-1"><label className="text-xs font-bold text-slate-700 flex items-center gap-1"><Calendar className="h-3 w-3 text-slate-400" /> Display Dates String</label><input type="text" value={dates} onChange={(e) => setDates(e.target.value)} placeholder="e.g. Oct 14-16" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs" /></div>
                 <div className="space-y-1"><label className="text-xs font-bold text-slate-700 flex items-center gap-1"><Calendar className="h-3 w-3 text-emerald-500" /> Live Event Start Time</label><input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs" /></div>
-                
+
                 <div className="space-y-1 sm:col-span-2">
                   <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                     <span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-slate-400" /> Venue Address</span>
@@ -209,7 +231,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </label>
                   <input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Moscone Center, SF" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm" />
                 </div>
-                
+
                 <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 flex items-center gap-1"><Globe className="h-3 w-3 text-slate-400" /> Official Website</label><input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs" /></div>
               </div>
             </div>
@@ -236,8 +258,81 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           )}
 
           {activeTab === 'positioning' && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="space-y-6 animate-in fade-in duration-150">
+
+              {/* Font Family & Alignment */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Primary Font Family</label>
+                  <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold">
+                    <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                    <option value="Inter">Inter</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Playfair Display">Playfair Display</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Text Alignment</label>
+                  <div className="flex bg-slate-50 border border-slate-200 rounded-xl p-1">
+                    {['left', 'center', 'right'].map((align) => (
+                      <button
+                        key={align} type="button" onClick={() => setAlignment(align as any)}
+                        className={`flex-1 py-1 text-xs font-bold capitalize rounded-lg transition-colors ${alignment === align ? 'bg-teal-600 text-white' : 'text-slate-500 hover:bg-slate-200'}`}
+                      >
+                        {align}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Attendee Name Typography */}
+              <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Name Styling</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({nameFontSize}px)</label>
+                    <input type="range" min="40" max="150" value={nameFontSize} onChange={(e) => setNameFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({nameY})</label>
+                    <input type="range" min="700" max="1300" value={nameY} onChange={(e) => setNameY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 pt-2">
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} disabled={nameUseGradient} className="h-8 w-10 rounded cursor-pointer disabled:opacity-50" />
+                    <span className="text-xs font-bold text-slate-700">Solid Color</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={nameUseGradient} onChange={(e) => setNameUseGradient(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" />
+                    <span className="text-xs font-bold text-slate-700">Use Brand Gradient</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Subtext Typography */}
+              <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Role & Company Styling</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({subTextFontSize}px)</label>
+                    <input type="range" min="20" max="80" value={subTextFontSize} onChange={(e) => setSubTextFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({subTextY})</label>
+                    <input type="range" min="700" max="1300" value={subTextY} onChange={(e) => setSubTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <input type="color" value={subTextColor} onChange={(e) => setSubTextColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer" />
+                  <span className="text-xs font-bold text-slate-700">Solid Color</span>
+                </div>
+              </div>
+
+              {/* Badge Element Display (QR, Dates, Venue) */}
+              <div className="space-y-2 pt-4 border-t border-slate-200">
                 <label className="text-xs font-bold text-slate-700 block">Badge Element Display</label>
                 <div className="space-y-2">
                   <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Dynamic QR Code</span></div><input type="checkbox" checked={showQrCode} onChange={(e) => setShowQrCode(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
@@ -247,6 +342,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               </div>
             </div>
           )}
+
 
           {activeTab === 'frames' && (
             <div className="space-y-4 animate-in fade-in duration-150">

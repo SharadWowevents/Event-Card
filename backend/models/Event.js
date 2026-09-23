@@ -40,12 +40,23 @@ const eventSchema = new mongoose.Schema(
       exhibitorHeadline: { type: String, default: 'VISIT OUR BOOTH' },
       sponsorHeadline: { type: String, default: 'PROUD SPONSOR' },
       overlayStyle: { type: String, default: 'card' },
+      // Inside backend/models/Event.js
+      // Find the textPositioning block and update it to look like this:
+
       textPositioning: {
-        nameY: { type: Number, default: 820 }, titleY: { type: Number, default: 875 },
-        companyY: { type: Number, default: 920 }, roleBadgeY: { type: Number, default: 760 },
-        textColor: { type: String, default: '#ffffff' }, alignment: { type: String, default: 'center' },
-        showQrCode: { type: Boolean, default: true }, showVenue: { type: Boolean, default: true },
-        showDate: { type: Boolean, default: true }
+        alignment: { type: String, default: 'center' },
+        showQrCode: { type: Boolean, default: true },
+        showVenue: { type: Boolean, default: true },
+        showDate: { type: Boolean, default: true },
+
+        // NEW TYPOGRAPHY FIELDS
+        nameFontSize: { type: Number, default: 80 },
+        nameColor: { type: String, default: '#ffffff' },
+        nameUseGradient: { type: Boolean, default: false },
+        nameY: { type: Number, default: 1130 },
+        subTextFontSize: { type: Number, default: 36 },
+        subTextColor: { type: String, default: '#e2e8f0' },
+        subTextY: { type: Number, default: 1210 }
       }
     },
     sponsors: [sponsorSchema],

@@ -23,6 +23,14 @@ export interface TextPositioning {
   showQrCode: boolean;
   showVenue: boolean;
   showDate: boolean;
+  
+  // NEW TYPOGRAPHY FIELDS
+  nameFontSize?: number;
+  nameColor?: string;
+  nameUseGradient?: boolean;
+  subTextFontSize?: number;
+  subTextColor?: string;
+  subTextY?: number;
 }
 
 export interface EventTemplateConfig {
