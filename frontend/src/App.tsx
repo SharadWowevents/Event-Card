@@ -18,9 +18,12 @@ const DEFAULT_ATTENDEE_BADGE: AttendeeBadgeData = {
 };
 
 export default function App() {
-  const [appMode, setAppMode] = useState<'public' | 'admin'>(
-    localStorage.getItem('token') ? 'admin' : 'public'
-  );
+  // 1. Initial State: If they are on the root URL '/', default to admin mode immediately
+  const [appMode, setAppMode] = useState<'public' | 'admin'>(() => {
+    if (window.location.pathname === '/' || window.location.pathname === '') return 'admin';
+    return localStorage.getItem('token') ? 'admin' : 'public';
+  });
+
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem('token')
   );
@@ -41,13 +44,14 @@ export default function App() {
   // STRICT URL PARSING & ROUTING
   useEffect(() => {
     const path = window.location.pathname;
-    // Extract everything after the first slash as the slug (e.g. "/demo" -> "demo")
     const slugFromUrl = path.length > 1 ? path.substring(1).replace(/\/$/, '') : null;
     
     const token = localStorage.getItem('token');
-    if (!slugFromUrl && token) {
+
+    // 2. FORCE ADMIN MODE ON ROOT: If there is no slug, this is the admin portal
+    if (!slugFromUrl) {
       setAppMode('admin');
-      setIsAuthenticated(true);
+      if (token) setIsAuthenticated(true);
     }
 
     fetch(`${API_BASE}/events`)
@@ -71,6 +75,7 @@ export default function App() {
           }
         } else {
           // If on the root URL, load the first event for the admin dashboard
+          setAppMode('admin'); // Ensure admin mode stays locked
           if (mappedEvents.length > 0) setSelectedEvent(mappedEvents[0]);
         }
       })
@@ -104,7 +109,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
-    setAppMode('public');
+    setAppMode('admin'); // Changed to drop them back at the login screen
     window.history.pushState({}, '', '/');
   };
 
@@ -153,7 +158,7 @@ export default function App() {
           <PublicAdvocacyStudio event={selectedEvent} badge={badge} onUpdateBadge={(u) => setBadge(prev => ({...prev, ...u}))} />
         </main>
         <footer className="py-6 text-center border-t border-slate-200">
-          {/* <button onClick={() => { setAppMode('admin'); window.history.pushState({}, '', '/'); }} className="text-xs font-medium text-slate-400 hover:text-slate-600">Organizer Login</button> */}
+          <button onClick={() => { setAppMode('admin'); window.history.pushState({}, '', '/'); }} className="text-xs font-medium text-slate-400 hover:text-slate-600">Organizer Login</button>
         </footer>
       </div>
     );
@@ -177,9 +182,6 @@ export default function App() {
             </div>
             <button type="submit" className="w-full rounded-xl bg-slate-900 px-4 py-2.5 font-bold text-white hover:bg-black transition-colors">Secure Login</button>
           </form>
-          <div className="mt-6 text-center">
-            <button onClick={() => { setAppMode('public'); window.history.pushState({}, '', '/'); }} className="text-xs text-slate-500 hover:text-slate-800">← Back to Public Site</button>
-          </div>
         </div>
       </div>
     );
