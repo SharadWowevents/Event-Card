@@ -81,9 +81,9 @@ export function Header({
           <button onClick={() => onSelectView('admin-analytics')} className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${currentView === 'admin-analytics' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
             <BarChart3 className="h-3.5 w-3.5 text-emerald-600" /><span>EMV Analytics</span>
           </button>
-          <button onClick={() => onSelectView('admin-integrations')} className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${currentView === 'admin-integrations' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
+          {/* <button onClick={() => onSelectView('admin-integrations')} className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${currentView === 'admin-integrations' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
             <Plug className="h-3.5 w-3.5 text-amber-600" /><span>Integrations</span>
-          </button>
+          </button> */}
           <button onClick={() => onSelectView('admin-team')} className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${currentView === 'admin-team' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
             <Users className="h-3.5 w-3.5 text-purple-600" /><span>Team</span>
           </button>

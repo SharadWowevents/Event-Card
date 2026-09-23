@@ -250,7 +250,7 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
           </div>
 
           {/* Role Mix */}
-          <div className="lg:col-span-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
+          {/* <div className="lg:col-span-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Advocate Role Mix</h3>
               <div className="mt-5 h-4 w-full rounded-full overflow-hidden flex shadow-inner">
@@ -267,7 +267,7 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
             </div>
           </div>
 
-        </div>
+        </div> */}
 
         {/* ROW 2: Top Channels */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
