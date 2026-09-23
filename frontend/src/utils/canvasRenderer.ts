@@ -16,6 +16,7 @@ export const renderBadgeToCanvas = async (
   event: EventItem,
   avatarImg: HTMLImageElement | null
 ) => {
+  await document.fonts.ready;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 

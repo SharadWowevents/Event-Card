@@ -1,3 +1,7 @@
+/* At the very top of src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap');
+
+/* ... your Tailwind directives like @tailwind base; etc ... */
 @import "tailwindcss";
 
 @layer base {
