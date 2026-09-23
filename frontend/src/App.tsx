@@ -153,7 +153,7 @@ export default function App() {
           <PublicAdvocacyStudio event={selectedEvent} badge={badge} onUpdateBadge={(u) => setBadge(prev => ({...prev, ...u}))} />
         </main>
         <footer className="py-6 text-center border-t border-slate-200">
-          <button onClick={() => { setAppMode('admin'); window.history.pushState({}, '', '/'); }} className="text-xs font-medium text-slate-400 hover:text-slate-600">Organizer Login</button>
+          {/* <button onClick={() => { setAppMode('admin'); window.history.pushState({}, '', '/'); }} className="text-xs font-medium text-slate-400 hover:text-slate-600">Organizer Login</button> */}
         </footer>
       </div>
     );
