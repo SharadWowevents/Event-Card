@@ -1,10 +1,21 @@
 import { AttendeeBadgeData, EventItem } from '../types';
 
-const loadImage = (url: string): Promise<HTMLImageElement> => {
+// ==========================================
+// IMAGE CACHE (Prevents 60fps network reloading)
+// ==========================================
+const imageCache: { [url: string]: HTMLImageElement } = {};
+
+const getCachedImage = (url: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
+    if (imageCache[url]) {
+      return resolve(imageCache[url]);
+    }
     const img = new Image();
     if (url.startsWith('http')) img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
+    img.onload = () => {
+      imageCache[url] = img; // Save to cache instantly
+      resolve(img);
+    };
     img.onerror = reject;
     img.src = url;
   });
@@ -17,26 +28,34 @@ export const renderBadgeToCanvas = async (
   avatarImg: HTMLImageElement | null
 ) => {
   await document.fonts.ready;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
 
   const WIDTH = 1080;
   const HEIGHT = 1350; 
+
+  // 1. PRE-LOAD BACKGROUND: Do this BEFORE touching the canvas to prevent black flashes
+  let frameImg: HTMLImageElement | null = null;
+  if (badge.customFrameUrl) {
+    try {
+      frameImg = await getCachedImage(badge.customFrameUrl);
+    } catch (err) {
+      console.error("Failed to load custom frame", err);
+    }
+  }
+
+  // 2. NOW we clear and resize the canvas (everything is in memory so it's instantaneous)
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
 
-  // 1. Draw Background Frame
-  if (badge.customFrameUrl) {
-    try {
-      const frameImg = await loadImage(badge.customFrameUrl);
-      const scale = Math.max(WIDTH / frameImg.width, HEIGHT / frameImg.height);
-      const x = (WIDTH - (frameImg.width * scale)) / 2;
-      const y = (HEIGHT - (frameImg.height * scale)) / 2;
-      ctx.drawImage(frameImg, x, y, frameImg.width * scale, frameImg.height * scale);
-    } catch (err) {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    }
+  // 3. Draw Background Frame (Synchronous)
+  if (frameImg) {
+    const scale = Math.max(WIDTH / frameImg.width, HEIGHT / frameImg.height);
+    const scaledWidth = frameImg.width * scale;
+    const scaledHeight = frameImg.height * scale;
+    const x = (WIDTH - scaledWidth) / 2;
+    const y = (HEIGHT - scaledHeight) / 2;
+    ctx.drawImage(frameImg, x, y, scaledWidth, scaledHeight);
   } else {
     const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
     grad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9');
@@ -45,7 +64,7 @@ export const renderBadgeToCanvas = async (
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
   }
 
-  // 2. Draw Selfie
+  // 4. Draw Selfie with Pan and Zoom Math
   if (avatarImg) {
     ctx.save();
     const centerX = WIDTH / 2;
@@ -60,13 +79,20 @@ export const renderBadgeToCanvas = async (
     const scale = badge.scale || 1;
     const panX = badge.panX || 0;
     const panY = badge.panY || 0;
+
     const baseImgSize = radius * 2 * scale;
     const drawX = centerX - (baseImgSize / 2) + panX;
     const drawY = centerY - (baseImgSize / 2) + panY;
 
     const imgAspect = avatarImg.width / avatarImg.height;
-    const finalWidth = imgAspect > 1 ? baseImgSize * imgAspect : baseImgSize;
-    const finalHeight = imgAspect > 1 ? baseImgSize : baseImgSize / imgAspect;
+    let finalWidth = baseImgSize;
+    let finalHeight = baseImgSize;
+    
+    if (imgAspect > 1) {
+      finalWidth = baseImgSize * imgAspect;
+    } else {
+      finalHeight = baseImgSize / imgAspect;
+    }
 
     ctx.drawImage(avatarImg, drawX - (finalWidth - baseImgSize)/2, drawY - (finalHeight - baseImgSize)/2, finalWidth, finalHeight);
     ctx.restore();
@@ -78,26 +104,20 @@ export const renderBadgeToCanvas = async (
     ctx.stroke();
   }
 
-  // ==========================================
-  // 3. DYNAMIC TYPOGRAPHY ENGINE
-  // ==========================================
+  // 5. Draw Typography
   const textConfig = event.templateConfig?.textPositioning || {};
   const fontFamily = event.theme?.fontFamily || 'Plus Jakarta Sans';
-  
-  // Extract configurations with safe fallbacks
   const align = textConfig.alignment || 'center';
   const nameSize = textConfig.nameFontSize || 80;
   const nameY = textConfig.nameY || 1130;
   const subSize = textConfig.subTextFontSize || 36;
   const subY = textConfig.subTextY || 1210;
 
-  // Calculate X based on Alignment
   ctx.textAlign = align as CanvasTextAlign;
   let textX = WIDTH / 2;
   if (align === 'left') textX = 90;
   if (align === 'right') textX = WIDTH - 90;
 
-  // Draw Attendee Name
   ctx.font = `bold ${nameSize}px "${fontFamily}", sans-serif`;
   if (textConfig.nameUseGradient) {
     const textGrad = ctx.createLinearGradient(0, nameY - nameSize, WIDTH, nameY);
@@ -109,7 +129,6 @@ export const renderBadgeToCanvas = async (
   }
   ctx.fillText(badge.name || 'Your Name', textX, nameY);
 
-  // Draw Subtext (Role • Title • Company)
   ctx.font = `600 ${subSize}px "${fontFamily}", sans-serif`;
   ctx.fillStyle = textConfig.subTextColor || '#e2e8f0';
   
@@ -117,9 +136,7 @@ export const renderBadgeToCanvas = async (
   const subText = [roleText, badge.title, badge.company].filter(Boolean).join(' • ');
   ctx.fillText(subText || 'Event Attendee', textX, subY);
 
-  // ==========================================
-  // 4. BOTTOM ELEMENTS (Dates, Venue, QR)
-  // ==========================================
+  // 6. Draw Bottom Elements
   const showVenue = textConfig.showVenue ?? true;
   const showDate = textConfig.showDate ?? true;
   const showQrCode = textConfig.showQrCode ?? true;

@@ -172,9 +172,13 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    
+    // 1. INSTANT UI UPDATE: Transition to preview immediately
     onUpdateBadge({ avatarUrl: dataUrl, scale: 1, panX: 0, panY: 0, rotation: 0 });
-    await saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle);
     setStep('preview');
+    
+    // 2. BACKGROUND UPLOAD: Remove 'await' so the UI doesn't freeze
+    saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle).catch(console.error);
   };
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -184,9 +188,13 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     reader.onload = async (ev) => {
       if (ev.target?.result) {
         const dataUrl = ev.target.result as string;
+        
+        // 1. INSTANT UI UPDATE
         onUpdateBadge({ avatarUrl: dataUrl, scale: 1, panX: 0, panY: 0, rotation: 0 });
-        await saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle);
         setStep('preview');
+        
+        // 2. BACKGROUND UPLOAD
+        saveLeadToBackend(dataUrl, badge.customFrameUrl, badge.themeStyle).catch(console.error);
       }
     };
     reader.readAsDataURL(file);
