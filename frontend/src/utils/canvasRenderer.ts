@@ -28,84 +28,33 @@ export const renderBadgeToCanvas = async (
   if (!ctx) return;
   canvas.width = WIDTH; canvas.height = HEIGHT;
 
+  // LAYER 1: BASE BACKGROUND (Gradient fallback)
+  const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+  grad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9');
+  grad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
+  ctx.fillStyle = grad; 
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // LAYER 2: ATTENDEE PHOTO (FULL BLEED BEHIND FRAME)
+  if (avatarImg) {
+    // The photo captured by the camera is exactly 1080x1350.
+    // We draw it directly to fill the entire canvas without any circle/square clipping.
+    ctx.drawImage(avatarImg, 0, 0, WIDTH, HEIGHT);
+  }
+
+  // LAYER 3: CUSTOM FRAME CUTOUT (On Top of Photo)
   if (frameImg) {
     const scale = Math.max(WIDTH / frameImg.width, HEIGHT / frameImg.height);
     const scaledWidth = frameImg.width * scale; const scaledHeight = frameImg.height * scale;
     ctx.drawImage(frameImg, (WIDTH - scaledWidth) / 2, (HEIGHT - scaledHeight) / 2, scaledWidth, scaledHeight);
-  } else {
-    const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-    grad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9');
-    grad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, WIDTH, HEIGHT);
   }
 
-  // ==========================================
-  // DYNAMIC SELFIE MASK ENGINE
-  // ==========================================
-  if (avatarImg) {
-    ctx.save();
-    
-    // Get config or fallback to default centered circle
-    const selfieConfig = event.templateConfig?.selfiePositioning || { 
-      shape: 'circle', x: 540, y: 595, size: 560, borderRadius: 0 
-    };
-    
-    const centerX = selfieConfig.x;
-    const centerY = selfieConfig.y;
-    const size = selfieConfig.size;
-    const halfSize = size / 2;
-
-    // Create the physical clip mask based on shape
-    ctx.beginPath();
-    if (selfieConfig.shape === 'square') {
-      if (ctx.roundRect) {
-        ctx.roundRect(centerX - halfSize, centerY - halfSize, size, size, selfieConfig.borderRadius);
-      } else {
-        ctx.rect(centerX - halfSize, centerY - halfSize, size, size); // Fallback for very old browsers
-      }
-    } else {
-      ctx.arc(centerX, centerY, halfSize, 0, Math.PI * 2);
-    }
-    ctx.closePath();
-    ctx.clip();
-
-    // Scale & Pan Logic
-    const scale = badge.scale || 1;
-    const panX = badge.panX || 0;
-    const panY = badge.panY || 0;
-    const baseImgSize = size * scale;
-    const drawX = centerX - (baseImgSize / 2) + panX;
-    const drawY = centerY - (baseImgSize / 2) + panY;
-
-    const imgAspect = avatarImg.width / avatarImg.height;
-    let finalWidth = baseImgSize; let finalHeight = baseImgSize;
-    if (imgAspect > 1) finalWidth = baseImgSize * imgAspect;
-    else finalHeight = baseImgSize / imgAspect;
-
-    ctx.drawImage(avatarImg, drawX - (finalWidth - baseImgSize)/2, drawY - (finalHeight - baseImgSize)/2, finalWidth, finalHeight);
-    ctx.restore();
-
-    // Draw the white glassmorphism border ring over the mask
-    ctx.beginPath();
-    if (selfieConfig.shape === 'square') {
-      if (ctx.roundRect) ctx.roundRect(centerX - halfSize, centerY - halfSize, size, size, selfieConfig.borderRadius);
-      else ctx.rect(centerX - halfSize, centerY - halfSize, size, size);
-    } else {
-      ctx.arc(centerX, centerY, halfSize, 0, Math.PI * 2);
-    }
-    ctx.lineWidth = 12;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.stroke();
-  }
-
-  // Text Engine
+  // LAYER 4: TEXT & DYNAMIC QR CODE
   const textConfig = event.templateConfig?.textPositioning || {};
   const fontFamily = event.theme?.fontFamily || 'Plus Jakarta Sans';
   const align = textConfig.alignment || 'center';
-  const nameSize = textConfig.nameFontSize || 80;
-  const nameY = textConfig.nameY || 1130;
-  const subSize = textConfig.subTextFontSize || 36;
-  const subY = textConfig.subTextY || 1210;
+  const nameSize = textConfig.nameFontSize || 80; const nameY = textConfig.nameY || 1130;
+  const subSize = textConfig.subTextFontSize || 36; const subY = textConfig.subTextY || 1210;
 
   ctx.textAlign = align as CanvasTextAlign;
   let textX = WIDTH / 2;
@@ -115,8 +64,7 @@ export const renderBadgeToCanvas = async (
   ctx.font = `bold ${nameSize}px "${fontFamily}", sans-serif`;
   if (textConfig.nameUseGradient) {
     const textGrad = ctx.createLinearGradient(0, nameY - nameSize, WIDTH, nameY);
-    textGrad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9');
-    textGrad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
+    textGrad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9'); textGrad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
     ctx.fillStyle = textGrad;
   } else ctx.fillStyle = textConfig.nameColor || '#ffffff';
   ctx.fillText(badge.name || 'Your Name', textX, nameY);
@@ -144,4 +92,5 @@ export const renderBadgeToCanvas = async (
     ctx.fillStyle = 'white'; ctx.fillRect(qrX+68, qrY+68, 28, 28); ctx.fillStyle = '#0f172a'; ctx.fillRect(qrX+74, qrY+74, 16, 16);
   }
 };
+
 export const exportCanvasToPng = (c: HTMLCanvasElement, f: string) => { const l = document.createElement('a'); l.download = f; l.href = c.toDataURL('image/png', 1.0); l.click(); };
