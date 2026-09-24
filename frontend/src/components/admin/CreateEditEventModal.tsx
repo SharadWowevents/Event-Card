@@ -35,17 +35,20 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [nameColor, setNameColor] = useState('#ffffff');
   const [nameUseGradient, setNameUseGradient] = useState(false);
   const [nameY, setNameY] = useState(1130);
+  
   const [subTextFontSize, setSubTextFontSize] = useState(36);
   const [subTextColor, setSubTextColor] = useState('#e2e8f0');
   const [subTextY, setSubTextY] = useState(1210);
+
+  // NEW: Bottom Elements (Date/Venue) Positioning
+  const [bottomTextX, setBottomTextX] = useState(540);
+  const [bottomTextY, setBottomTextY] = useState(1290);
 
   const [bgType, setBgType] = useState<'color' | 'gradient' | 'image'>('gradient');
   const [bgColor, setBgColor] = useState('#0f172a');
   const [bgImageUrl, setBgImageUrl] = useState('');
 
-  // 100% BLANK DYNAMIC FORM STATE
   const [formFields, setFormFields] = useState<any[]>([]);
-
   const [customFrames, setCustomFrames] = useState<{ _id?: string; id?: string; label: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'brand' | 'positioning' | 'frames'>('general');
 
@@ -71,15 +74,19 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setNameColor(eventToEdit?.templateConfig?.textPositioning?.nameColor || '#ffffff');
       setNameUseGradient(eventToEdit?.templateConfig?.textPositioning?.nameUseGradient ?? false);
       setNameY(eventToEdit?.templateConfig?.textPositioning?.nameY ?? 1130);
+      
       setSubTextFontSize(eventToEdit?.templateConfig?.textPositioning?.subTextFontSize ?? 36);
       setSubTextColor(eventToEdit?.templateConfig?.textPositioning?.subTextColor || '#e2e8f0');
       setSubTextY(eventToEdit?.templateConfig?.textPositioning?.subTextY ?? 1210);
+
+      // Load new bottom positioning variables
+      setBottomTextX(eventToEdit?.templateConfig?.textPositioning?.bottomTextX ?? 540);
+      setBottomTextY(eventToEdit?.templateConfig?.textPositioning?.bottomTextY ?? 1290);
 
       setBgType(eventToEdit?.theme?.backgroundType || 'gradient');
       setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
       setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
 
-      // Load dynamic fields and sync keys to fix dropdown bug
       const loadedFields = (eventToEdit?.templateConfig?.formFields || []).map((f: any) => ({
         ...f,
         inputType: f.inputType || f.type || 'text',
@@ -158,15 +165,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const addField = () => {
     setFormFields(prev => [
       ...prev,
-      {
-        id: `field_${Date.now()}`,
-        label: '',
-        inputType: 'text',
-        type: 'text',
-        maxLength: 50,
-        show: true,
-        required: false
-      }
+      { id: `field_${Date.now()}`, label: '', inputType: 'text', type: 'text', maxLength: 50, show: true, required: false }
     ]);
   };
 
@@ -175,7 +174,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       prev.map((field, i) => {
         if (i === index) {
           const updated = { ...field, [key]: value };
-          // Keep both keys in sync so the dropdown never loses its value
           if (key === 'inputType') updated.type = value;
           if (key === 'type') updated.inputType = value;
           if (key === 'show' && value === false) updated.required = false;
@@ -194,14 +192,9 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     e.preventDefault();
     if (!name.trim()) return;
 
-    // Sanitize fields before sending to MongoDB to avoid 400 Bad Request
     const sanitizedFormFields = formFields.map(f => ({
-      id: f.id,
-      label: f.label,
-      inputType: f.inputType || f.type || 'text',
-      maxLength: Number(f.maxLength) || 50,
-      show: Boolean(f.show),
-      required: Boolean(f.required)
+      id: f.id, label: f.label, inputType: f.inputType || f.type || 'text',
+      maxLength: Number(f.maxLength) || 50, show: Boolean(f.show), required: Boolean(f.required)
     }));
 
     const savedEvent: EventItem = {
@@ -220,8 +213,13 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       },
       templateConfig: {
         attendeeHeadline: '', speakerHeadline: '', exhibitorHeadline: '', sponsorHeadline: '', overlayStyle: 'card',
-        textPositioning: { textColor: '#ffffff', alignment, showQrCode, showVenue, showDate, nameFontSize, nameColor, nameUseGradient, nameY, subTextFontSize, subTextColor, subTextY },
-        formFields: sanitizedFormFields // Safe mapping applied here
+        textPositioning: { 
+          textColor: '#ffffff', alignment, showQrCode, showVenue, showDate, 
+          nameFontSize, nameColor, nameUseGradient, nameY, 
+          subTextFontSize, subTextColor, subTextY,
+          bottomTextX, bottomTextY // SAVING NEW VARIABLES
+        },
+        formFields: sanitizedFormFields
       },
       sponsors: eventToEdit?.sponsors || [], customFrames
     };
@@ -268,7 +266,6 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 flex items-center justify-between"><span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-slate-400" /> Venue Address</span></label><input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Moscone Center, SF" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm" /></div>
               </div>
 
-              {/* DYNAMIC FORM BUILDER */}
               <div className="space-y-4 p-5 rounded-xl border border-slate-200 bg-slate-50">
                 <div className="flex justify-between items-center">
                   <div>
@@ -279,60 +276,27 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     <Plus className="w-3.5 h-3.5" /> Add Input
                   </button>
                 </div>
-
                 <div className="space-y-3">
                   {formFields.map((field, index) => (
                     <div key={field.id} className="flex flex-wrap sm:flex-nowrap items-end gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm">
-
-                      <div className="flex-1 space-y-1 min-w-[150px]">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Column Name</label>
-                        <input type="text" required value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} placeholder="e.g. Employee Code" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" />
-                      </div>
-
+                      <div className="flex-1 space-y-1 min-w-[150px]"><label className="text-[10px] font-bold text-slate-500 uppercase">Column Name</label><input type="text" required value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} placeholder="e.g. Employee Code" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" /></div>
                       <div className="w-[110px] space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Data Type</label>
-                        <select 
-                          value={field.inputType || field.type || 'text'} 
-                          onChange={(e) => updateField(index, 'inputType', e.target.value)} 
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-teal-500 focus:outline-hidden cursor-pointer"
-                        >
-                          <option value="text">Text</option>
-                          <option value="email">Email</option>
-                          <option value="tel">Phone</option>
-                          <option value="number">Number</option>
+                        <select value={field.inputType || field.type || 'text'} onChange={(e) => updateField(index, 'inputType', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-teal-500 focus:outline-hidden cursor-pointer">
+                          <option value="text">Text</option><option value="email">Email</option><option value="tel">Phone</option><option value="number">Number</option>
                         </select>
                       </div>
-
-                      <div className="w-[80px] space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Length</label>
-                        <input type="number" required min="1" value={field.maxLength} onChange={(e) => updateField(index, 'maxLength', Number(e.target.value))} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" />
-                      </div>
-
+                      <div className="w-[80px] space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Length</label><input type="number" required min="1" value={field.maxLength} onChange={(e) => updateField(index, 'maxLength', Number(e.target.value))} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" /></div>
                       <div className="flex items-center gap-3 px-3 h-[30px] border-l border-slate-200">
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input type="checkbox" checked={field.show} onChange={(e) => updateField(index, 'show', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" />
-                          <span className="text-[10px] font-bold text-slate-600 uppercase">Show</span>
-                        </label>
-                        <label className={`flex items-center gap-1.5 ${!field.show ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}>
-                          <input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" />
-                          <span className="text-[10px] font-bold text-slate-600 uppercase">Req</span>
-                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={field.show} onChange={(e) => updateField(index, 'show', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" /><span className="text-[10px] font-bold text-slate-600 uppercase">Show</span></label>
+                        <label className={`flex items-center gap-1.5 ${!field.show ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" /><span className="text-[10px] font-bold text-slate-600 uppercase">Req</span></label>
                       </div>
-
-                      <button type="button" onClick={() => removeField(index)} className="h-[30px] w-[30px] flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <button type="button" onClick={() => removeField(index)} className="h-[30px] w-[30px] flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   ))}
-
-                  {formFields.length === 0 && (
-                    <div className="text-center py-8 text-xs text-slate-500 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50">
-                      No columns defined. Click "+ Add Input" to start building your form.
-                    </div>
-                  )}
+                  {formFields.length === 0 && <div className="text-center py-8 text-xs text-slate-500 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50">No columns defined. Click "+ Add Input" to start building your form.</div>}
                 </div>
               </div>
-
             </div>
           )}
 
@@ -342,20 +306,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Brand Accent Colors</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Primary Color</label>
-                      <div className="flex items-center space-x-2">
-                        <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
-                        <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Secondary Color</label>
-                      <div className="flex items-center space-x-2">
-                        <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
-                        <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" />
-                      </div>
-                    </div>
+                    <div><label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Primary Color</label><div className="flex items-center space-x-2"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" /></div></div>
+                    <div><label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Secondary Color</label><div className="flex items-center space-x-2"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" /></div></div>
                   </div>
                 </div>
 
@@ -374,10 +326,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Attendee Page Preview</span>
-                <div
-                  className="relative w-[300px] h-[375px] rounded-[1.5rem] shadow-xl border-4 border-slate-900 overflow-hidden flex items-center justify-center transition-all duration-300"
-                  style={{ backgroundColor: bgType === 'color' ? bgColor : undefined, backgroundImage: bgType === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : bgType === 'image' && bgImageUrl ? `url(${bgImageUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', fontFamily: fontFamily }}
-                >
+                <div className="relative w-[300px] h-[375px] rounded-[1.5rem] shadow-xl border-4 border-slate-900 overflow-hidden flex items-center justify-center transition-all duration-300" style={{ backgroundColor: bgType === 'color' ? bgColor : undefined, backgroundImage: bgType === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : bgType === 'image' && bgImageUrl ? `url(${bgImageUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', fontFamily: fontFamily }}>
                   <div className="absolute top-4 left-4 right-4 flex justify-between items-center opacity-80"><div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm"></div><div className="w-16 h-2 rounded bg-white/30 backdrop-blur-sm"></div></div>
                   <div className="w-[85%] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-5 text-center">
                     <div className="w-12 h-12 rounded-xl mx-auto mb-3" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}></div>
@@ -429,6 +378,23 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                     <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Venue & Location</span></div><input type="checkbox" checked={showVenue} onChange={(e) => setShowVenue(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
                     <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Event Dates</span></div><input type="checkbox" checked={showDate} onChange={(e) => setShowDate(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
                   </div>
+
+                  {/* NEW VENUE & DATE POSITIONING OPTIONS */}
+                  {(showVenue || showDate) && (
+                    <div className="mt-4 space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                      <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Venue & Date Positioning</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase">X-Position ({bottomTextX})</label>
+                          <input type="range" min="0" max="1080" value={bottomTextX} onChange={(e) => setBottomTextX(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({bottomTextY})</label>
+                          <input type="range" min="700" max="1350" value={bottomTextY} onChange={(e) => setBottomTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -436,9 +402,28 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
                 <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 bg-slate-900 pointer-events-none">
                   <div className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left" style={{ transform: `scale(${300 / 1080})`, background: customFrames.length > 0 ? `url(${customFrames[0].url}) center/cover` : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, fontFamily: fontFamily }}>
+                    
                     <div className="absolute w-full px-20" style={{ top: `${nameY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: nameUseGradient ? 'transparent' : nameColor, backgroundImage: nameUseGradient ? `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` : 'none', WebkitBackgroundClip: nameUseGradient ? 'text' : 'border-box', lineHeight: 1 }}>Dynamic Field 1</div>
                     <div className="absolute w-full px-20" style={{ top: `${subTextY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${subTextFontSize}px`, fontWeight: '600', color: subTextColor, lineHeight: 1 }}>Dynamic Field 2</div>
-                    {(showVenue || showDate) && (<div className="absolute bottom-[60px] w-full text-center text-[28px] font-semibold text-white/90">{[showDate && dates ? `📅 ${dates}` : '', showVenue && (venue || location) ? `📍 ${venue || location}` : ''].filter(Boolean).join('   •   ')}</div>)}
+                    
+                    {/* LIVE PREVIEW FOR ADJUSTABLE VENUE/DATE */}
+                    {(showVenue || showDate) && (
+                      <div 
+                        className="absolute whitespace-nowrap"
+                        style={{
+                          left: `${bottomTextX}px`,
+                          top: `${bottomTextY}px`,
+                          transform: 'translate(-50%, -80%)',
+                          fontSize: '28px',
+                          fontWeight: '600',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          lineHeight: 1
+                        }}
+                      >
+                        {[showDate && dates ? `📅 ${dates}` : '', showVenue && (venue || location) ? `📍 ${venue || location}` : ''].filter(Boolean).join('   •   ')}
+                      </div>
+                    )}
+                    
                     {showQrCode && (<div className="absolute top-[50px] right-[50px] w-[110px] h-[110px] bg-white rounded-[12px] flex items-center justify-center"><div className="w-[85%] h-[85%] border-[3px] border-slate-900 rounded-sm opacity-90 relative"><div className="absolute top-1 left-1 w-3 h-3 bg-slate-900"></div><div className="absolute top-1 right-1 w-3 h-3 bg-slate-900"></div><div className="absolute bottom-1 left-1 w-3 h-3 bg-slate-900"></div><div className="absolute bottom-1 right-1 w-5 h-5 bg-slate-900"></div></div></div>)}
                   </div>
                 </div>

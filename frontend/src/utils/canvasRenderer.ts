@@ -17,7 +17,6 @@ export const renderBadgeToCanvas = async (
 ) => {
   await document.fonts.ready;
 
-  // 1. LOAD CUSTOM FRAME FIRST TO GET EXACT DIMENSIONS
   let frameImg: HTMLImageElement | null = null;
   if (badge.customFrameUrl) {
     try { 
@@ -35,14 +34,12 @@ export const renderBadgeToCanvas = async (
   canvas.width = WIDTH; 
   canvas.height = HEIGHT;
 
-  // LAYER 1: BASE BACKGROUND (Gradient fallback)
   const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
   grad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9');
   grad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
   ctx.fillStyle = grad; 
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // LAYER 2: ATTENDEE PHOTO (Crops proportionally like object-cover to prevent stretching)
   if (avatarImg) {
     const imgAspect = avatarImg.width / avatarImg.height;
     const canvasAspect = WIDTH / HEIGHT;
@@ -63,12 +60,10 @@ export const renderBadgeToCanvas = async (
     ctx.drawImage(avatarImg, offsetX, offsetY, drawWidth, drawHeight);
   }
 
-  // LAYER 3: CUSTOM FRAME CUTOUT (Overlays on top)
   if (frameImg) {
     ctx.drawImage(frameImg, 0, 0, WIDTH, HEIGHT);
   }
 
-  // LAYER 4: TEXT & DYNAMIC QR CODE
   const textConfig = event.templateConfig?.textPositioning || {};
   const fontFamily = event.theme?.fontFamily || 'Plus Jakarta Sans';
   const align = textConfig.alignment || 'center';
@@ -110,7 +105,12 @@ export const renderBadgeToCanvas = async (
     const elementsText = [];
     if (textConfig.showDate !== false && event.dates) elementsText.push(`📅 ${event.dates}`);
     if (textConfig.showVenue !== false && (event.venue || event.location)) elementsText.push(`📍 ${event.venue || event.location}`);
-    ctx.fillText(elementsText.join('   •   '), WIDTH / 2, HEIGHT - (60 * scaleRatio));
+    
+    // NEW: Use the bottom coordinates for Venue and Date
+    const bottomX = (textConfig.bottomTextX ?? 540) * scaleRatio;
+    const bottomY = (textConfig.bottomTextY ?? 1290) * (HEIGHT / 1350);
+
+    ctx.fillText(elementsText.join('   •   '), bottomX, bottomY);
   }
 
   if (textConfig.showQrCode !== false) {
