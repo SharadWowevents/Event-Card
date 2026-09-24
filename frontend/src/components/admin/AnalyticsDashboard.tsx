@@ -31,7 +31,7 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/events/${event.id || event._id}/leads`)
+    fetch(`/api/events/${event.id || event._id}/leads`)
       .then(res => res.json())
       .then(data => {
         const mappedLeads = data.map((d: any) => ({
