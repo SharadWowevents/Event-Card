@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,  } from 'react';
 import { Users, UserPlus, Search, Trash2, X, Key } from 'lucide-react';
 import { AdminRole } from '../../types';
-import { useNavigate } from 'react-router-dom';
+
 
 const getInitials = (name: string) => {
   const parts = name.trim().split(' ').filter(p => p.length > 0);
@@ -9,7 +9,7 @@ const getInitials = (name: string) => {
 };
 
 export function TeamManagement() {
-  const navigate = useNavigate();
+  
   const [members, setMembers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   
