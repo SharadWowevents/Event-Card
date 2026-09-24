@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Copy, Share2, Download, AlertCircle } from 'lucide-react';
+import { X, Check, Copy, Share2, Download, AlertCircle, Info } from 'lucide-react';
 import { AttendeeBadgeData, EventItem } from '../../types';
 
 interface SocialShareModalProps {
@@ -15,19 +15,16 @@ export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onD
   const [copied, setCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [fallbackMode, setFallbackMode] = useState(false);
+  const [showPasteHint, setShowPasteHint] = useState(false);
 
-  // 1. FIXED LOCATION BUG
-  // Ensures location/venue fallback correctly to prevent "undefined"
   const locationString = event.venue || event.location || 'the venue';
   const eventDates = event.dates || '';
   
-  // Clean generated string
   const defaultShareText = `I'm attending ${event.name} ${eventDates ? `this ${eventDates}` : ''} at ${locationString}! Looking forward to connecting. #${event.name.replace(/\s+/g, '')}`;
   
   const [shareText, setShareText] = useState(defaultShareText);
 
   useEffect(() => {
-    // Check if the current browser supports Web Share Level 2 (File Sharing)
     if (!navigator.canShare || !navigator.share) {
       setFallbackMode(true);
     }
@@ -54,11 +51,9 @@ export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onD
     }).catch(console.error);
   };
 
-  // 2. MODERN NATIVE WEB SHARE (BUNDLES IMAGE + TEXT)
   const handleNativeShare = async (platform: string) => {
     if (isSharing) return;
     
-    // If browser doesn't support native sharing, use the fallback UI
     if (fallbackMode || !canvasRef.current) {
       handleCopyText();
       onDownload();
@@ -69,7 +64,13 @@ export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onD
     setIsSharing(true);
     
     try {
-      // 3. Convert Canvas to a native File Blob
+      // 1. THE FIX: Always force-copy the text to the clipboard first.
+      // Because WhatsApp/LinkedIn strip text when an image is attached, 
+      // this ensures the user can just hit "Paste" when the app opens.
+      await navigator.clipboard.writeText(shareText).catch(() => {});
+      setShowPasteHint(true); // Show the UI hint
+
+      // 2. Generate the Image Blob
       const blob = await new Promise<Blob | null>((resolve) => {
         canvasRef.current?.toBlob(resolve, 'image/jpeg', 0.95);
       });
@@ -80,31 +81,28 @@ export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onD
       
       const shareData = {
         title: `My ${event.name} Badge`,
-        text: shareText,
-        files: [file] // <--- THIS ATTACHES THE IMAGE TO THE POST
+        text: shareText, // Kept for apps that DO support both (like Email clients)
+        files: [file] 
       };
 
-      // Ensure the browser can handle this specific payload
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share(shareData);
         logShareToBackend(platform);
       } else {
-        // Fallback for browsers that support 'share' but NOT 'files' (e.g. older Androids)
         await navigator.share({
           title: `My ${event.name} Badge`,
           text: shareText,
         });
-        // Auto-download the image so they can attach it manually
         onDownload();
         logShareToBackend(platform);
       }
     } catch (err: any) {
-      // User cancelled or share failed
       if (err.name !== 'AbortError') {
         console.error("Native share failed:", err);
       }
     } finally {
       setIsSharing(false);
+      setTimeout(() => setShowPasteHint(false), 6000); // Hide hint after 6 seconds
     }
   };
 
@@ -141,6 +139,14 @@ export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onD
               <span>{fallbackMode ? 'Copy & Download for WhatsApp' : 'Send WhatsApp'}</span>
             </button>
           </div>
+
+          {/* Dynamic User Hint (Shows up when sharing) */}
+          {showPasteHint && !fallbackMode && (
+             <div className="flex items-start gap-2 bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs text-sky-800 animate-in fade-in zoom-in duration-200">
+             <Info className="w-4 h-4 shrink-0 mt-0.5 text-sky-600" />
+             <p><strong>Text Copied!</strong> Some apps ignore the text when an image is attached. Just hit <strong>"Paste"</strong> in the app to add your caption!</p>
+           </div>
+          )}
 
           {/* Desktop Fallback Warning */}
           {fallbackMode && (
