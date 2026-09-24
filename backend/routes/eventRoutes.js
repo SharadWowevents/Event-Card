@@ -8,52 +8,57 @@ const fs = require('fs');
 const path = require('path');
 
 // ==========================================
-// 1. DIRECTORY SETUP & MULTER CONFIGURATION
+// 1. UTILITIES & DIRECTORY SETUP
 // ==========================================
 
-// A. Custom Frames Setup
+// Utility to escape regex inputs (Prevents ReDoS attacks)
+const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+
+// File filter to ensure ONLY images are uploaded to the server
+const imageFileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|webp|gif/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (extname && mimetype) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only images (JPG, PNG, WEBP, GIF) are allowed.'));
+  }
+};
+
+// Directory Creator Utility
+const ensureDir = (dirPath) => {
+  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+};
+
 const framesDir = path.join(__dirname, '../uploads/frames');
-if (!fs.existsSync(framesDir)) fs.mkdirSync(framesDir, { recursive: true });
-
-const frameStorage = multer.diskStorage({
-  destination: function (req, file, cb) { cb(null, framesDir); },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
-    const ext = path.extname(file.originalname) || '.png';
-    cb(null, 'frame_' + uniqueSuffix + ext);
-  }
-});
-const frameUpload = multer({ storage: frameStorage });
-
 const bgDir = path.join(__dirname, '../uploads/backgrounds');
-if (!fs.existsSync(bgDir)) fs.mkdirSync(bgDir, { recursive: true });
-
-const bgStorage = multer.diskStorage({
-  destination: function (req, file, cb) { cb(null, bgDir); },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
-    const ext = path.extname(file.originalname) || '.jpg';
-    cb(null, 'bg_' + uniqueSuffix + ext);
-  }
-});
-const bgUpload = multer({ storage: bgStorage });
-
-// B. Event Moments Setup
 const momentsDir = path.join(__dirname, '../uploads/moments');
-if (!fs.existsSync(momentsDir)) fs.mkdirSync(momentsDir, { recursive: true });
 
-const momentStorage = multer.diskStorage({
-  destination: function (req, file, cb) { cb(null, momentsDir); },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
-    const ext = path.extname(file.originalname) || '.jpg';
-    cb(null, 'moment_' + uniqueSuffix + ext);
-  }
-});
-const momentUpload = multer({ storage: momentStorage });
+ensureDir(framesDir);
+ensureDir(bgDir);
+ensureDir(momentsDir);
 
 // ==========================================
-// 2. CORE EVENT ROUTES
+// 2. MULTER CONFIGURATIONS
+// ==========================================
+
+const createStorage = (destinationDir, prefix) => multer.diskStorage({
+  destination: function (req, file, cb) { cb(null, destinationDir); },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1000);
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `${prefix}_${uniqueSuffix}${ext}`);
+  }
+});
+
+const frameUpload = multer({ storage: createStorage(framesDir, 'frame'), fileFilter: imageFileFilter });
+const bgUpload = multer({ storage: createStorage(bgDir, 'bg'), fileFilter: imageFileFilter });
+const momentUpload = multer({ storage: createStorage(momentsDir, 'moment'), fileFilter: imageFileFilter });
+
+// ==========================================
+// 3. CORE EVENT ROUTES
 // ==========================================
 
 // Get all events
@@ -64,10 +69,11 @@ router.get('/', async (req, res) => {
 
     if (status && status !== 'all') query.status = status;
     if (search) {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { name: { $regex: search,$options: 'i' } },
-        { venue: { $regex: search,$options: 'i' } },
-        { slug: { $regex: search,$options: 'i' } }
+        { name: { $regex: safeSearch,$options: 'i' } },
+        { venue: { $regex: safeSearch,$options: 'i' } },
+        { slug: { $regex: safeSearch,$options: 'i' } }
       ];
     }
 
@@ -82,7 +88,7 @@ router.get('/', async (req, res) => {
 router.get('/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
-    const isObjectId = identifier.match(/^[0-9a-fA-F]{24}$/);
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
     const event = isObjectId
       ? await Event.findById(identifier)
       : await Event.findOne({ slug: identifier });
@@ -115,7 +121,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const updated = await Event.findByIdAndUpdate(req.params.id, req.body, {
-      returnDocument: 'after',
+      new: true, // Replaced 'returnDocument: after' with standard Mongoose 'new: true'
       runValidators: true
     });
     if (!updated) return res.status(404).json({ error: 'Event not found' });
@@ -133,10 +139,11 @@ router.get('/:id/leads', async (req, res) => {
 
     if (role && role !== 'All') query.role = role.toLowerCase();
     if (search) {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { name: { $regex: search,$options: 'i' } },
-        { company: { $regex: search,$options: 'i' } },
-        { title: { $regex: search,$options: 'i' } }
+        { name: { $regex: safeSearch,$options: 'i' } },
+        { company: { $regex: safeSearch,$options: 'i' } },
+        { title: { $regex: safeSearch,$options: 'i' } }
       ];
     }
 
@@ -148,7 +155,7 @@ router.get('/:id/leads', async (req, res) => {
 });
 
 // ==========================================
-// 3. CUSTOM FRAMES UPLOAD ROUTES
+// 4. CUSTOM FRAMES UPLOAD ROUTES
 // ==========================================
 
 // Upload Custom Frame
@@ -158,18 +165,17 @@ router.post('/:id/frames', frameUpload.single('frameImage'), async (req, res) =>
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (!req.file) {
-      return res.status(400).json({ error: 'No image file was received by the server' });
+      return res.status(400).json({ error: 'No valid image file was received.' });
     }
 
     const label = req.body.label || 'Custom Frame';
-    const publicUrl = `/api/uploads/frames/${req.file.filename}`; // Clean relative URL
+    const publicUrl = `/api/uploads/frames/${req.file.filename}`;
 
     event.customFrames.push({ url: publicUrl, label });
     await event.save();
     
     res.status(201).json(event.customFrames);
   } catch (err) {
-    console.error("Upload Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -182,10 +188,10 @@ router.delete('/:id/frames/:frameId', async (req, res) => {
 
     const frameToDelete = event.customFrames.find(f => f._id.toString() === req.params.frameId);
 
-    // Physically delete the file from VPS disk
-    if (frameToDelete) {
-      const filename = frameToDelete.url.split('/').pop();
-      const filePath = path.join(__dirname, '../uploads/frames', filename);
+    // Physically delete the file safely
+    if (frameToDelete && frameToDelete.url) {
+      const filename = path.basename(frameToDelete.url); // Safer than split('/').pop()
+      const filePath = path.join(framesDir, filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
 
@@ -200,7 +206,7 @@ router.delete('/:id/frames/:frameId', async (req, res) => {
 });
 
 // ==========================================
-// 4. EVENT MOMENTS (GALLERY) ROUTES
+// 5. EVENT MOMENTS (GALLERY) ROUTES
 // ==========================================
 
 // Fetch Moments for Gallery
@@ -217,7 +223,7 @@ router.get('/:id/moments', async (req, res) => {
 router.post('/:id/moments', momentUpload.single('momentImage'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No image file was received by the server' });
+      return res.status(400).json({ error: 'No valid image file was received.' });
     }
 
     const publicUrl = `/api/uploads/moments/${req.file.filename}`;
@@ -246,10 +252,12 @@ router.delete('/:id/moments/:momentId', async (req, res) => {
     const moment = await Moment.findById(req.params.momentId);
     if (!moment) return res.status(404).json({ error: 'Moment not found' });
 
-    // Physically delete the file from VPS disk
-    const filename = moment.imageUrl.split('/').pop();
-    const filePath = path.join(__dirname, '../uploads/moments', filename);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    // Physically delete the file safely
+    if (moment.imageUrl) {
+      const filename = path.basename(moment.imageUrl);
+      const filePath = path.join(momentsDir, filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
 
     // Delete from MongoDB
     await Moment.findByIdAndDelete(req.params.momentId);
@@ -264,7 +272,14 @@ router.post('/:id/background', bgUpload.single('backgroundImage'), async (req, r
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
-    if (!req.file) return res.status(400).json({ error: 'No image file received' });
+    if (!req.file) return res.status(400).json({ error: 'No valid image file received' });
+
+    // Prevent Storage Leaks: Delete the old background image if it exists before saving the new one
+    if (event.theme && event.theme.backgroundImageUrl) {
+      const oldFilename = path.basename(event.theme.backgroundImageUrl);
+      const oldFilePath = path.join(bgDir, oldFilename);
+      if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
+    }
 
     const publicUrl = `/api/uploads/backgrounds/${req.file.filename}`;
 
@@ -275,7 +290,6 @@ router.post('/:id/background', bgUpload.single('backgroundImage'), async (req, r
     await event.save();
     res.status(201).json({ url: publicUrl });
   } catch (err) {
-    console.error("BG Upload Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
