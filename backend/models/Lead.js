@@ -3,15 +3,22 @@ const mongoose = require('mongoose');
 const leadSchema = new mongoose.Schema(
   {
     event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
-    name: { type: String, required: true, trim: true },
-    email: { type: String, trim: true, lowercase: true, required: true },
-    mobile: { type: String, trim: true, required: true },
-    title: { type: String, required: true },
-    company: { type: String, required: true },
-    role: { type: String, enum: ['attendee', 'speaker', 'exhibitor', 'sponsor'], default: 'attendee' },
+    
+    // 1. LEGACY FIELDS MADE OPTIONAL (Removed required: true to prevent 400 crashes)
+    name: { type: String, trim: true, default: 'Attendee' }, 
+    email: { type: String, trim: true, lowercase: true, default: '' },
+    mobile: { type: String, trim: true, default: '' },
+    title: { type: String, default: '' },
+    company: { type: String, default: '' },
+    role: { type: String, default: 'attendee' }, 
     customQuote: { type: String, default: '' },
+
+    // 2. NEW DYNAMIC FIELD TO CATCH ALL CUSTOM BUILDER DATA
+    dynamicData: { type: Object, default: {} }, 
+
+    // MEDIA & ANALYTICS
     avatarUrl: { type: String, required: true }, // The raw selfie
-    finalBadgeUrl: { type: String, default: null }, // NEW: The finished framed poster
+    finalBadgeUrl: { type: String, default: null }, // The finished framed poster
     themeStyle: { type: String, default: 'gradient' },
     customFrameUrl: { type: String, default: null },
     platformsShared: { type: [String], default: ['Direct Download'] },
