@@ -81,7 +81,7 @@ const eventSchema = new mongoose.Schema(
       formFields: [{
         id: String,
         label: String,
-        type: String,
+        inputType: String,
         maxLength: Number,
         show: { type: Boolean, default: true },
         required: { type: Boolean, default: false }

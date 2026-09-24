@@ -79,8 +79,14 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setBgColor(eventToEdit?.theme?.backgroundColor || '#0f172a');
       setBgImageUrl(eventToEdit?.theme?.backgroundImageUrl || '');
 
-      // Load dynamic fields
-      setFormFields(eventToEdit?.templateConfig?.formFields || []);
+      // Load dynamic fields and sync keys to fix dropdown bug
+      const loadedFields = (eventToEdit?.templateConfig?.formFields || []).map((f: any) => ({
+        ...f,
+        inputType: f.inputType || f.type || 'text',
+        type: f.inputType || f.type || 'text'
+      }));
+      setFormFields(loadedFields);
+
       setCustomFrames(eventToEdit?.customFrames || []);
 
       const defaultStart = new Date();
@@ -106,16 +112,16 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
     try {
       const eventId = eventToEdit.id || eventToEdit._id;
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5011/api' : '/api';
       const formData = new FormData();
       formData.append('frameImage', file);
       formData.append('label', `Custom Frame ${customFrames.length + 1}`);
 
       const res = await fetch(`${API_BASE}/events/${eventId}/frames`, { method: 'POST', body: formData });
       if (!res.ok) throw new Error(await res.text() || "Backend rejected payload");
-      
+
       setCustomFrames(await res.json());
-    } catch (err: any) { alert(`Upload failed: ${err.message}`); } 
+    } catch (err: any) { alert(`Upload failed: ${err.message}`); }
     finally { if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
 
@@ -126,7 +132,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
     try {
       const eventId = eventToEdit.id || eventToEdit._id;
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5011/api' : '/api';
       const formData = new FormData();
       formData.append('backgroundImage', file);
 
@@ -143,21 +149,41 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
     const eventId = eventToEdit?.id || eventToEdit?._id;
     if (!eventId) return;
     try {
-      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+      const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5011/api' : '/api';
       const res = await fetch(`${API_BASE}/events/${eventId}/frames/${id}`, { method: 'DELETE' });
       if (res.ok) setCustomFrames(prev => prev.filter(f => f._id !== id && f.id !== id));
     } catch (err) { console.error(err); }
   };
 
   const addField = () => {
-    setFormFields([...formFields, { id: `field_${Date.now()}`, label: '', type: 'text', maxLength: 50, show: true, required: false }]);
+    setFormFields(prev => [
+      ...prev,
+      {
+        id: `field_${Date.now()}`,
+        label: '',
+        inputType: 'text',
+        type: 'text',
+        maxLength: 50,
+        show: true,
+        required: false
+      }
+    ]);
   };
 
   const updateField = (index: number, key: string, value: any) => {
-    const updated = [...formFields];
-    updated[index][key] = value;
-    if (key === 'show' && value === false) updated[index].required = false; 
-    setFormFields(updated);
+    setFormFields(prev =>
+      prev.map((field, i) => {
+        if (i === index) {
+          const updated = { ...field, [key]: value };
+          // Keep both keys in sync so the dropdown never loses its value
+          if (key === 'inputType') updated.type = value;
+          if (key === 'type') updated.inputType = value;
+          if (key === 'show' && value === false) updated.required = false;
+          return updated;
+        }
+        return field;
+      })
+    );
   };
 
   const removeField = (index: number) => {
@@ -167,6 +193,16 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    // Sanitize fields before sending to MongoDB to avoid 400 Bad Request
+    const sanitizedFormFields = formFields.map(f => ({
+      id: f.id,
+      label: f.label,
+      inputType: f.inputType || f.type || 'text',
+      maxLength: Number(f.maxLength) || 50,
+      show: Boolean(f.show),
+      required: Boolean(f.required)
+    }));
 
     const savedEvent: EventItem = {
       id: eventToEdit ? eventToEdit.id : `evt-${Date.now()}`,
@@ -185,7 +221,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       templateConfig: {
         attendeeHeadline: '', speakerHeadline: '', exhibitorHeadline: '', sponsorHeadline: '', overlayStyle: 'card',
         textPositioning: { textColor: '#ffffff', alignment, showQrCode, showVenue, showDate, nameFontSize, nameColor, nameUseGradient, nameY, subTextFontSize, subTextColor, subTextY },
-        formFields // Only saving our dynamic fields
+        formFields: sanitizedFormFields // Safe mapping applied here
       },
       sponsors: eventToEdit?.sponsors || [], customFrames
     };
@@ -247,15 +283,19 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="space-y-3">
                   {formFields.map((field, index) => (
                     <div key={field.id} className="flex flex-wrap sm:flex-nowrap items-end gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm">
-                      
+
                       <div className="flex-1 space-y-1 min-w-[150px]">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Column Name</label>
                         <input type="text" required value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} placeholder="e.g. Employee Code" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" />
                       </div>
-                      
+
                       <div className="w-[110px] space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Data Type</label>
-                        <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden">
+                        <select 
+                          value={field.inputType || field.type || 'text'} 
+                          onChange={(e) => updateField(index, 'inputType', e.target.value)} 
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-teal-500 focus:outline-hidden cursor-pointer"
+                        >
                           <option value="text">Text</option>
                           <option value="email">Email</option>
                           <option value="tel">Phone</option>
@@ -284,7 +324,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                       </button>
                     </div>
                   ))}
-                  
+
                   {formFields.length === 0 && (
                     <div className="text-center py-8 text-xs text-slate-500 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50">
                       No columns defined. Click "+ Add Input" to start building your form.

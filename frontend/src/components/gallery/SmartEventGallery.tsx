@@ -30,7 +30,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
   const [activeMoment, setActiveMoment] = useState<EventMoment | null>(null);
 
   const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000/api' 
+    ? 'http://localhost:5011/api' 
     : '/api';
 
   useEffect(() => {

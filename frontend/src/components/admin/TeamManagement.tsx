@@ -26,7 +26,7 @@ export function TeamManagement() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch('/api/team', {
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/team`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -43,7 +43,7 @@ export function TeamManagement() {
   const handleRemoveMember = async (memberId: string) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`/api/team/${memberId}`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/team/${memberId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -62,7 +62,7 @@ export function TeamManagement() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('/api/team/invite', {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/team/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: inviteName, email: inviteEmail, role: inviteRole })
@@ -85,7 +85,7 @@ export function TeamManagement() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`/api/team/${selectedMember._id}/password`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/team/${selectedMember._id}/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ newPassword })

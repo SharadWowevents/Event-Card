@@ -15,7 +15,7 @@ export function SocialShareModal({ isOpen, onClose, badge, event, onDownload }: 
 
   const trackShare = async (platform: string) => {
     if (!badge.leadId) return;
-    await fetch(`/api/badges/${badge.leadId}/track`, {
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/${badge.leadId}/track`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'share', platform })
     }).catch(console.error);

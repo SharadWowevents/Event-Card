@@ -10,7 +10,7 @@ import { CreateEditEventModal } from './components/admin/CreateEditEventModal';
 import { SmartEventGallery } from './components/gallery/SmartEventGallery';
 import { Lock } from 'lucide-react';
 
-const API_BASE = '/api';
+const API_BASE = `${import.meta.env.VITE_BACKEND_URL}/api`;
 const DEFAULT_ATTENDEE_BADGE: AttendeeBadgeData = {
   name: '', email: '', mobile: '', title: '', company: '', 
   role: '' as any, // <-- Set this to empty so the dropdown starts blank
