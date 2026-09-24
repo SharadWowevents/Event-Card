@@ -4,19 +4,14 @@ const leadSchema = new mongoose.Schema(
   {
     event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
     
-    // 1. LEGACY FIELDS MADE OPTIONAL (Removed required: true to prevent 400 crashes)
-    name: { type: String, trim: true, default: 'Attendee' }, 
-    email: { type: String, trim: true, lowercase: true, default: '' },
-    mobile: { type: String, trim: true, default: '' },
-    title: { type: String, default: '' },
-    company: { type: String, default: '' },
-    role: { type: String, default: 'attendee' }, 
-    customQuote: { type: String, default: '' },
+    // We keep 'name' at the root level because the Canvas renderer relies on it for the big text
+    name: { type: String, trim: true, default: 'Anonymous' }, 
 
-    // 2. NEW DYNAMIC FIELD TO CATCH ALL CUSTOM BUILDER DATA
+    // THE ONLY FIELD THAT MATTERS FOR INPUTS NOW:
+    // This will hold exactly and only what you configure in the Admin Panel
     dynamicData: { type: Object, default: {} }, 
 
-    // MEDIA & ANALYTICS
+    // MEDIA & ANALYTICS (Required for the system to work)
     avatarUrl: { type: String, required: true }, // The raw selfie
     finalBadgeUrl: { type: String, default: null }, // The finished framed poster
     themeStyle: { type: String, default: 'gradient' },
@@ -25,7 +20,10 @@ const leadSchema = new mongoose.Schema(
     downloadsCount: { type: Number, default: 1 },
     sharesCount: { type: Number, default: 0 }
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    strict: false // Ensures Mongoose doesn't strip out the dynamicData object keys
+  }
 );
 
 module.exports = mongoose.model('Lead', leadSchema);
