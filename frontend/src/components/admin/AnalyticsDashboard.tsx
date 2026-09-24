@@ -60,7 +60,7 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
       const q = leadsSearch.toLowerCase();
       const matchesName = l.name?.toLowerCase().includes(q);
       const matchesEmail = l.email?.toLowerCase().includes(q);
-      // Search through ALL dynamic form fields as well
+      // Search through ALL dynamic form fields safely
       const matchesDynamic = l.dynamicData && Object.values(l.dynamicData).some(
         (val: any) => String(val).toLowerCase().includes(q)
       );
@@ -142,6 +142,25 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
     };
   }).sort((a, b) => b.shares - a.shares);
 
+
+  // --- SMART FALLBACK FOR DYNAMIC FIELDS ---
+  // Ensures data renders even if column IDs change or for legacy records
+  const getDynamicValue = (lead: any, field: any) => {
+    // 1. Try strict ID match (Standard behavior)
+    if (lead.dynamicData && lead.dynamicData[field.id]) {
+      return lead.dynamicData[field.id];
+    }
+    
+    // 2. Smart fallback to root-level data using the field's label
+    const lbl = (field.label || '').toLowerCase();
+    if (lbl.includes('name')) return lead.name || '-';
+    if (lbl.includes('email')) return lead.email || '-';
+    if (lbl.includes('company') || lbl.includes('org')) return lead.company || '-';
+    if (lbl.includes('title') || lbl.includes('role')) return lead.title || lead.role || '-';
+    if (lbl.includes('phone') || lbl.includes('mobile')) return lead.mobile || '-';
+
+    return '-'; // Final fallback
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20">
@@ -288,15 +307,15 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
                           <img src={lead.badgeThumbnail} alt={lead.name} referrerPolicy="no-referrer" className="h-8 w-8 rounded-full object-cover border border-slate-200 bg-slate-100" />
                           <div>
                             <div className="font-bold text-slate-900">{lead.name || 'Anonymous'}</div>
-                            <div className="text-[11px] text-slate-400 font-mono">{lead.email || 'No email provided'}</div>
+                            {/* <div className="text-[11px] text-slate-400 font-mono">{lead.email || 'No email provided'}</div> */}
                           </div>
                         </div>
                       </td>
 
-                      {/* DYNAMIC: Read exactly from dynamicData */}
+                      {/* DYNAMIC WITH SMART FALLBACK */}
                       {customFields.map((field: any) => (
                         <td key={field.id} className="py-3.5 px-4 font-medium text-slate-800">
-                          {lead.dynamicData ? (lead.dynamicData[field.id] || '-') : '-'}
+                          {getDynamicValue(lead, field)}
                         </td>
                       ))}
 
