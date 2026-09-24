@@ -12,7 +12,6 @@ interface AnalyticsDashboardProps {
 
 export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
   const [leadsSearch, setLeadsSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('All');
   const [showEmvInfo, setShowEmvInfo] = useState(false);
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
   
@@ -28,6 +27,9 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
   const totalShares = event.sharesCount || 0;
   const estimatedReach = Math.round(totalShares * 115); 
   const calculatedEmv = event.emvValue || Math.round((estimatedReach / 1000) * cpmBenchmark);
+
+  // EXTRACT DYNAMIC COLUMNS FROM EVENT SETTINGS
+  const customFields = (event.templateConfig?.formFields || []).filter((f: any) => f.show);
 
   useEffect(() => {
     setIsLoading(true);
@@ -48,19 +50,21 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
       .finally(() => setIsLoading(false));
   }, [event.id, event._id]);
 
-  // Reset to page 1 whenever filters change
+  // Reset to page 1 whenever search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [leadsSearch, roleFilter]);
+  }, [leadsSearch]);
 
   const filteredLeads = leads.filter((l) => {
-    if (roleFilter !== 'All' && l.role !== roleFilter.toLowerCase()) return false;
     if (leadsSearch.trim()) {
       const q = leadsSearch.toLowerCase();
-      return (
-        l.name.toLowerCase().includes(q) || l.company.toLowerCase().includes(q) ||
-        l.title.toLowerCase().includes(q) || (l.email && l.email.toLowerCase().includes(q))
+      const matchesName = l.name?.toLowerCase().includes(q);
+      const matchesEmail = l.email?.toLowerCase().includes(q);
+      // Search through ALL dynamic form fields as well
+      const matchesDynamic = l.dynamicData && Object.values(l.dynamicData).some(
+        (val: any) => String(val).toLowerCase().includes(q)
       );
+      return matchesName || matchesEmail || matchesDynamic;
     }
     return true;
   });
@@ -113,17 +117,7 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
   const pathD = points.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
   const areaD = `${pathD} L ${points[points.length - 1].x} ${chartHeight - 30} L ${points[0].x} ${chartHeight - 30} Z`;
 
-  // --- 2. DYNAMIC PLATFORMS & ROLES ---
-  const roleStats = ['attendee', 'speaker', 'exhibitor', 'sponsor'].map(role => {
-    const count = leads.filter(l => l.role === role).length;
-    const percentage = leads.length > 0 ? Math.round((count / leads.length) * 100) : 0;
-    let color = '#0ea5e9';
-    if (role === 'speaker') color = '#a855f7';
-    if (role === 'exhibitor') color = '#10b981';
-    if (role === 'sponsor') color = '#f59e0b';
-    return { role: role.charAt(0).toUpperCase() + role.slice(1) + 's', count, percentage, color };
-  });
-
+  // --- 2. DYNAMIC PLATFORMS STATS ---
   const platformStats = ['LinkedIn', 'X', 'WhatsApp', 'Direct Download'].map(platform => {
     const platformLeads = leads.filter(l => l.platformsShared?.includes(platform));
     let metricCount = 0;
@@ -175,36 +169,14 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
               <div className="flex items-center justify-between text-slate-500 text-xs font-semibold"><span>Total Social Shares</span><Share2 className="h-4 w-4 text-sky-600" /></div>
               <div className="mt-2 text-3xl font-black text-slate-900">{totalShares.toLocaleString()}</div>
             </div>
-            {/* <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold"><span>Estimated Social Reach</span><Users className="h-4 w-4 text-indigo-600" /></div>
-              <div className="mt-2 text-3xl font-black text-slate-900">{(estimatedReach / 1000).toFixed(1)}K</div>
-            </div> */}
-            {/* <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/70 to-teal-50/70 p-5 shadow-xs relative">
-              <div className="flex items-center justify-between text-emerald-800 text-xs font-bold">
-                <span className="flex items-center gap-1">Earned Media Value (EMV)<button onClick={() => setShowEmvInfo(!showEmvInfo)} className="text-emerald-700 hover:text-emerald-900"><HelpCircle className="h-3.5 w-3.5" /></button></span>
-                <DollarSign className="h-4 w-4 text-emerald-600" />
-              </div>
-              <div className="mt-2 text-3xl font-black text-emerald-700">${calculatedEmv.toLocaleString()}</div>
-              
-              {showEmvInfo && (
-                <div className="absolute left-4 right-4 top-full mt-2 rounded-xl bg-slate-900 text-white p-3 text-[11px] shadow-2xl z-20 animate-in fade-in duration-150">
-                  <div className="font-bold text-teal-400 mb-1">How EMV is Calculated:</div>
-                  <p className="text-slate-300 leading-relaxed">
-                    Earned Media Value (EMV) = (Estimated Organic Reach / 1,000) × Benchmark B2B Tech CPM ($28.50). This represents the paid advertising expenditure required to achieve equivalent qualified reach.
-                  </p>
-                </div>
-              )}
-            </div> */}
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
         
-        {/* ROW 1: Timeline Graph & Role Mix */}
+        {/* ROW 1: Timeline Graph */}
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-          
-          {/* Live Timeline SVG Chart */}
           <div className="lg:col-span-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -243,30 +215,10 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
                 <div className="absolute pointer-events-none rounded-xl bg-slate-900 text-white p-2.5 text-xs shadow-xl z-20 -translate-x-1/2 -translate-y-full" style={{ left: `${(hoveredPointIndex / (chartData.length - 1)) * 90 + 5}%`, top: `${points[hoveredPointIndex].y * 0.8}px` }}>
                   <div className="font-bold text-teal-400">{chartData[hoveredPointIndex].date}</div>
                   <div className="text-slate-200">Shares: <strong>{chartData[hoveredPointIndex].shares.toLocaleString()}</strong></div>
-                  {/* <div className="text-slate-400 text-[10px]">EMV: ${chartData[hoveredPointIndex].emv.toLocaleString()}</div> */}
                 </div>
               )}
             </div>
           </div>
-
-          {/* Role Mix */}
-          {/* <div className="lg:col-span-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Advocate Role Mix</h3>
-              <div className="mt-5 h-4 w-full rounded-full overflow-hidden flex shadow-inner">
-                {roleStats.map((r, i) => (<div key={i} style={{ width: `${r.percentage}%`, backgroundColor: r.color }} title={`${r.role}: ${r.percentage}%`} />))}
-              </div>
-              <div className="mt-5 space-y-3">
-                {roleStats.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: r.color }} /><span className="font-semibold text-slate-700">{r.role}</span></div>
-                    <div className="flex items-center space-x-2"><span className="font-bold text-slate-900">{r.count.toLocaleString()}</span><span className="text-[11px] text-slate-400 font-mono">({r.percentage}%)</span></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div> */}
-
         </div>
 
         {/* ROW 2: Top Channels */}
@@ -292,12 +244,9 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
               <p className="text-xs text-slate-500">Attendees who customized and published official advocacy cards ({filteredLeads.length} leads)</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                <option value="All">All Roles</option><option value="Attendee">Attendees</option><option value="Speaker">Speakers</option><option value="Exhibitor">Exhibitors</option><option value="Sponsor">Sponsors</option>
-              </select>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                <input type="text" value={leadsSearch} onChange={(e) => setLeadsSearch(e.target.value)} placeholder="Search name, company..." className="rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:border-teal-500 focus:outline-hidden" />
+                <input type="text" value={leadsSearch} onChange={(e) => setLeadsSearch(e.target.value)} placeholder="Search records..." className="rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:border-teal-500 focus:outline-hidden" />
               </div>
               <button onClick={handleExportCsv} className="flex items-center justify-center space-x-1.5 rounded-xl bg-slate-900 hover:bg-black text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition-colors">
                 <Download className="h-3.5 w-3.5" /><span>Export CSV</span>
@@ -311,12 +260,18 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
             ) : filteredLeads.length === 0 ? (
               <div className="flex items-center justify-center h-48 text-slate-400 text-sm font-medium">No attendees found.</div>
             ) : (
-              <table className="w-full text-left text-xs text-slate-700">
+              <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
                 <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   <tr>
+                    {/* FIXED: Advocate Column */}
                     <th className="py-3 px-5">Advocate</th>
-                    <th className="py-3 px-4">Role</th>
-                    <th className="py-3 px-4">Company & Designation</th>
+                    
+                    {/* DYNAMIC: Generated Columns based on Form Builder */}
+                    {customFields.map((field: any) => (
+                      <th key={field.id} className="py-3 px-4">{field.label}</th>
+                    ))}
+                    
+                    {/* FIXED: Final Required Columns */}
                     <th className="py-3 px-4">Channels Used</th>
                     <th className="py-3 px-4 text-center">Downloads</th>
                     <th className="py-3 px-4 text-center">Shares</th>
@@ -326,24 +281,26 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
                 <tbody className="divide-y divide-slate-100">
                   {currentLeads.map((lead) => (
                     <tr key={lead.id} className="hover:bg-slate-50/70 transition-colors">
+                      
+                      {/* FIXED: Advocate Column */}
                       <td className="py-3.5 px-5">
                         <div className="flex items-center space-x-3">
                           <img src={lead.badgeThumbnail} alt={lead.name} referrerPolicy="no-referrer" className="h-8 w-8 rounded-full object-cover border border-slate-200 bg-slate-100" />
                           <div>
-                            <div className="font-bold text-slate-900">{lead.name}</div>
+                            <div className="font-bold text-slate-900">{lead.name || 'Anonymous'}</div>
                             <div className="text-[11px] text-slate-400 font-mono">{lead.email || 'No email provided'}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase ${lead.role === 'speaker' ? 'bg-purple-100 text-purple-700' : lead.role === 'exhibitor' ? 'bg-emerald-100 text-emerald-700' : lead.role === 'sponsor' ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
-                          {lead.role}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-medium text-slate-800">{lead.company}</div>
-                        <div className="text-[11px] text-slate-500">{lead.title}</div>
-                      </td>
+
+                      {/* DYNAMIC: Read exactly from dynamicData */}
+                      {customFields.map((field: any) => (
+                        <td key={field.id} className="py-3.5 px-4 font-medium text-slate-800">
+                          {lead.dynamicData ? (lead.dynamicData[field.id] || '-') : '-'}
+                        </td>
+                      ))}
+
+                      {/* FIXED: Remaining Columns */}
                       <td className="py-3.5 px-4">
                         <div className="flex flex-wrap items-center gap-1.5 font-semibold text-slate-700">
                           {lead.platformsShared?.map((p: string, idx: number) => (
@@ -356,8 +313,8 @@ export function AnalyticsDashboard({ event }: AnalyticsDashboardProps) {
                           ))}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-center font-bold text-slate-800">{lead.downloadsCount}</td>
-                      <td className="py-3.5 px-4 text-center font-bold text-teal-600">{lead.sharesCount}</td>
+                      <td className="py-3.5 px-4 text-center font-bold text-slate-800">{lead.downloadsCount || 0}</td>
+                      <td className="py-3.5 px-4 text-center font-bold text-teal-600">{lead.sharesCount || 0}</td>
                       <td className="py-3.5 px-5 text-right font-mono text-[11px] text-slate-500">{lead.createdAt}</td>
                     </tr>
                   ))}
