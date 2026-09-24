@@ -8,29 +8,29 @@ const CPM_BENCHMARK = 28.50;
 const IMPRESSIONS_PER_SHARE = 115;
 
 // 1. Submit/Generate Attendee Badge
-// backend/routes/badgeRoutes.js
-// Look for the "Submit/Generate Attendee Badge" route and update the destructured body and Lead object:
-
 router.post('/', async (req, res) => {
   try {
-    // 1. Add "role" to the destructured body
-    const { eventId, name, email, mobile, title, company, role, customQuote, avatarUrl, themeStyle, customFrameUrl } = req.body;
+    // 1. EXTRACT dynamicData INSTEAD OF HARDCODED FIELDS
+    const { 
+      eventId, 
+      name, 
+      avatarUrl, 
+      themeStyle, 
+      customFrameUrl, 
+      dynamicData // <--- This captures your dynamic form inputs (including email)
+    } = req.body;
 
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
+    // 2. PASS dynamicData TO THE LEAD MODEL
     const lead = new Lead({
       event: eventId,
       name,
-      email,
-      mobile,
-      title,
-      company,
-      role, // 2. Pass the role to the Lead model
-      customQuote,
       avatarUrl,
       themeStyle,
       customFrameUrl,
+      dynamicData: dynamicData || {}, // <--- Saves the custom columns directly to DB
       downloadsCount: 1
     });
 
@@ -45,7 +45,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 2. Track Social Share or Download Action
 // 2. Track Social Share or Download Action
 router.post('/:leadId/track', async (req, res) => {
   try {
@@ -84,9 +83,7 @@ router.post('/:leadId/track', async (req, res) => {
   }
 });
 
-// ... (keep your existing POST / and POST /:leadId/track routes) ...
-
-// NEW: Save the finalized composite poster
+// 3. Save the finalized composite poster
 router.put('/:leadId/composite', async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.leadId);
@@ -100,6 +97,5 @@ router.put('/:leadId/composite', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 module.exports = router;
