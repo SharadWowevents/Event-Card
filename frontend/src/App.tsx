@@ -10,7 +10,7 @@ import { CreateEditEventModal } from './components/admin/CreateEditEventModal';
 import { SmartEventGallery } from './components/gallery/SmartEventGallery';
 import { Lock } from 'lucide-react';
 
-const API_BASE = `${import.meta.env.VITE_BACKEND_URL}/api`;
+const API_BASE = `/api`;
 const DEFAULT_ATTENDEE_BADGE: AttendeeBadgeData = {
   name: '', email: '', mobile: '', title: '', company: '', 
   role: '' as any, // <-- Set this to empty so the dropdown starts blank
@@ -41,6 +41,29 @@ export default function App() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<EventItem | null>(null);
 
+  // GLOBAL SECURITY INTERCEPTOR
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      
+      // If the backend rejects the request due to missing/deleted user (401)
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsAuthenticated(false);
+        setAppMode('admin');
+        window.history.pushState({}, '', '/');
+      }
+      return response;
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
   // STRICT URL PARSING & ROUTING
   useEffect(() => {
     const path = window.location.pathname;
@@ -57,26 +80,29 @@ export default function App() {
     fetch(`${API_BASE}/events`)
       .then(res => res.json())
       .then(data => {
-        const mappedEvents = data.map((e: any) => ({ ...e, id: e._id }));
-        setEvents(mappedEvents);
-        
-        if (slugFromUrl) {
-          // Clean the slug just in case older /e/ links are used
-          const cleanSlug = slugFromUrl.startsWith('e/') ? slugFromUrl.replace('e/', '') : slugFromUrl;
-          const matchedEvent = mappedEvents.find((e: EventItem) => e.slug === cleanSlug);
+        // If data is an array
+        if (Array.isArray(data)) {
+          const mappedEvents = data.map((e: any) => ({ ...e, id: e._id }));
+          setEvents(mappedEvents);
           
-          if (matchedEvent) {
-            setSelectedEvent(matchedEvent);
-            setAppMode('public');
+          if (slugFromUrl) {
+            // Clean the slug just in case older /e/ links are used
+            const cleanSlug = slugFromUrl.startsWith('e/') ? slugFromUrl.replace('e/', '') : slugFromUrl;
+            const matchedEvent = mappedEvents.find((e: EventItem) => e.slug === cleanSlug);
+            
+            if (matchedEvent) {
+              setSelectedEvent(matchedEvent);
+              setAppMode('public');
+            } else {
+              // STRICT FAIL: If slug doesn't exist, set to null so it triggers the 404 screen
+              setSelectedEvent(null);
+              setAppMode('public');
+            }
           } else {
-            // STRICT FAIL: If slug doesn't exist, set to null so it triggers the 404 screen
-            setSelectedEvent(null);
-            setAppMode('public');
+            // If on the root URL, load the first event for the admin dashboard
+            setAppMode('admin'); // Ensure admin mode stays locked
+            if (mappedEvents.length > 0) setSelectedEvent(mappedEvents[0]);
           }
-        } else {
-          // If on the root URL, load the first event for the admin dashboard
-          setAppMode('admin'); // Ensure admin mode stays locked
-          if (mappedEvents.length > 0) setSelectedEvent(mappedEvents[0]);
         }
       })
       .catch(err => console.error('Backend connection failed:', err))
@@ -101,6 +127,17 @@ export default function App() {
       setLoginEmail('');
       setLoginPassword('');
       window.history.pushState({}, '', '/');
+      
+      // Reload events to ensure we have the latest list
+      const eventRes = await fetch(`${API_BASE}/events`);
+      if (eventRes.ok) {
+        const eventsData = await eventRes.json();
+        if (Array.isArray(eventsData)) {
+          const mappedEvents = eventsData.map((e: any) => ({ ...e, id: e._id }));
+          setEvents(mappedEvents);
+          if (mappedEvents.length > 0) setSelectedEvent(mappedEvents[0]);
+        }
+      }
     } catch (err: any) {
       setAuthError(err.message);
     }
@@ -157,9 +194,6 @@ export default function App() {
         <main className="flex-1">
           <PublicAdvocacyStudio event={selectedEvent} badge={badge} onUpdateBadge={(u) => setBadge(prev => ({...prev, ...u}))} />
         </main>
-        {/* <footer className="py-6 text-center border-t border-slate-200">
-          <button onClick={() => { setAppMode('admin'); window.history.pushState({}, '', '/'); }} className="text-xs font-medium text-slate-400 hover:text-slate-600">Organizer Login</button>
-        </footer> */}
       </div>
     );
   }

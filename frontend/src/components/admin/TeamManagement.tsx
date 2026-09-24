@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Search, Trash2, X, Key } from 'lucide-react';
 import { AdminRole } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
 const getInitials = (name: string) => {
   const parts = name.trim().split(' ').filter(p => p.length > 0);
@@ -8,6 +9,7 @@ const getInitials = (name: string) => {
 };
 
 export function TeamManagement() {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   
@@ -24,13 +26,31 @@ export function TeamManagement() {
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
 
+  // Logout Helper
+  const forceLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
+    if (!token) return forceLogout();
+
     fetch(`/api/team`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
-      .then(data => setMembers(data))
+      .then(async (res) => {
+        // SECURITY CHECK: If token is dead or user deleted
+        if (res.status === 401 || res.status === 403) {
+          forceLogout();
+          return [];
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) setMembers(data);
+      })
       .catch(err => console.error("Failed to fetch team", err));
   }, []);
 
@@ -47,6 +67,9 @@ export function TeamManagement() {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (res.status === 401 || res.status === 403) return forceLogout();
+      
       if (res.ok) {
         setMembers(prev => prev.filter(m => m._id !== memberId));
       } else {
@@ -67,8 +90,10 @@ export function TeamManagement() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: inviteName, email: inviteEmail, role: inviteRole })
       });
-      const data = await res.json();
       
+      if (res.status === 401 || res.status === 403) return forceLogout();
+      
+      const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
       setMembers(prev => [data.user, ...prev]);
@@ -90,16 +115,16 @@ export function TeamManagement() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ newPassword })
       });
-      const data = await res.json();
       
+      if (res.status === 401 || res.status === 403) return forceLogout();
+      
+      const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Update local member state to 'Active' if they were 'Invited'
       setMembers(prev => prev.map(m => m._id === selectedMember._id ? { ...m, status: 'Active' } : m));
       
       setPasswordMsg(`Password successfully updated for ${selectedMember.name}!`);
       setNewPassword('');
-      // Auto-close after 2 seconds
       setTimeout(() => {
         setPasswordModalOpen(false);
         setPasswordMsg('');
