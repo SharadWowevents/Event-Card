@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Upload, Trash2, Users, Image as ImageIcon, Camera, 
-  Loader2, MapPin, Calendar, Download, Heart, Share2, X 
+  Loader2, MapPin, Calendar, Download, Heart, Share2, X, Check
 } from 'lucide-react';
 import { EventItem, AttendeeLead, EventMoment } from '../../types';
 
@@ -20,7 +20,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadImageBase64, setUploadImageBase64] = useState<string>('');
-  const [uploadFile, setUploadFile] = useState<File | null>(null); // NEW: Store the actual file
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState({
     title: '', location: '', timeString: '', credit: '', identifiedPeople: ''
   });
@@ -28,6 +28,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
 
   // Lightbox State
   const [activeMoment, setActiveMoment] = useState<EventMoment | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const API_BASE = window.location.hostname === 'localhost' 
     ? 'http://localhost:5011/api' 
@@ -57,15 +58,12 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
       .finally(() => setIsLoading(false));
   }, [event, API_BASE]);
 
-  // Handle Initial File Selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Store the physical file for Multer
     setUploadFile(file);
 
-    // Keep the Base64 reader ONLY for the UI preview inside the modal
     const reader = new FileReader();
     reader.onload = (ev) => {
       if (ev.target?.result) {
@@ -77,7 +75,6 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Submit Upload with Metadata via FormData
   const submitUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFile) return;
@@ -85,22 +82,18 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
 
     try {
       const formData = new FormData();
-      // 1. MUST match the Multer field name in backend: upload.single('momentImage')
       formData.append('momentImage', uploadFile);
-      
-      // 2. Append metadata
       formData.append('title', uploadForm.title || 'Event Moment');
       formData.append('location', uploadForm.location || 'Main Venue');
       formData.append('timeString', uploadForm.timeString || 'Day 1');
       formData.append('credit', uploadForm.credit || 'Event Photography');
 
-      // 3. Append identified people array
       const peopleArray = uploadForm.identifiedPeople.split(',').map(s => s.trim()).filter(Boolean);
       peopleArray.forEach(person => formData.append('identifiedPeople', person));
 
       const res = await fetch(`${API_BASE}/events/${event.id || event._id}/moments`, {
         method: 'POST',
-        body: formData // Notice: No Content-Type header so browser sets multipart boundary automatically
+        body: formData 
       });
       
       if (!res.ok) {
@@ -129,6 +122,48 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
       const res = await fetch(`${API_BASE}/events/${event.id || event._id}/moments/${momentId}`, { method: 'DELETE' });
       if (res.ok) setMoments(prev => prev.filter(m => m._id !== momentId));
     } catch (err) { console.error("Delete failed", err); }
+  };
+
+  // NATIVE SHARE HANDLER
+  const handleShareMoment = async () => {
+    if (!activeMoment) return;
+
+    const shareData = {
+      title: activeMoment.title,
+      text: `Check out this incredible moment from ${event.name}!`,
+      url: activeMoment.imageUrl // Always points to the raw hosted image link
+    };
+
+    if (navigator.share) {
+      // Use native device bottom-sheet menu
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share was cancelled or failed:', err);
+      }
+    } else {
+      // Fallback for Desktop Browsers: Copy to Clipboard
+      try {
+        await navigator.clipboard.writeText(activeMoment.imageUrl);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy link:", err);
+      }
+    }
+  };
+
+  // DOWNLOAD HANDLER
+  const handleDownloadMoment = () => {
+    if (!activeMoment) return;
+    const link = document.createElement('a');
+    link.href = activeMoment.imageUrl;
+    link.target = '_blank';
+    // Append the download attribute so browsers auto-download instead of just opening a new tab
+    link.download = `${activeMoment.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-hd.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -286,17 +321,30 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
                </div>
 
                <div className="space-y-3 mt-8 pt-6 border-t border-slate-700/30">
-                 <button className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                 
+                 {/* DOWNLOAD ACTION */}
+                 <button 
+                   onClick={handleDownloadMoment} 
+                   className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+                 >
                    <Download className="w-5 h-5"/> Download Full HD Photo
                  </button>
+                 
                  <div className="flex gap-3">
                    <button className="flex-1 border border-slate-600 hover:bg-slate-800 text-slate-300 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
                      <Heart className="w-4 h-4"/> Save
                    </button>
-                   <button className="flex-1 border border-slate-600 hover:bg-slate-800 text-slate-300 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-                     <Share2 className="w-4 h-4"/> Share
+
+                   {/* SHARE ACTION */}
+                   <button 
+                     onClick={handleShareMoment} 
+                     className="flex-1 border border-slate-600 hover:bg-slate-800 text-slate-300 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                   >
+                     {copiedLink ? <Check className="w-4 h-4 text-emerald-400"/> : <Share2 className="w-4 h-4"/>} 
+                     <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
                    </button>
                  </div>
+
                </div>
             </div>
           </div>
