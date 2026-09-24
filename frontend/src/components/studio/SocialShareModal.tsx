@@ -1,51 +1,189 @@
-import React, { useState } from 'react';
-import { X, Check, Copy, Share2, Download, Linkedin, Twitter, MessageCircle } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import React, { useState, useEffect } from 'react';
+import { X, Check, Copy, Share2, Download, AlertCircle } from 'lucide-react';
 import { AttendeeBadgeData, EventItem } from '../../types';
 
 interface SocialShareModalProps {
-  isOpen: boolean; onClose: () => void; badge: AttendeeBadgeData; event: EventItem; canvasRef: React.RefObject<HTMLCanvasElement | null>; onDownload: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  badge: AttendeeBadgeData;
+  event: EventItem;
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+  onDownload: () => void;
 }
 
-export function SocialShareModal({ isOpen, onClose, badge, event, onDownload }: SocialShareModalProps) {
+export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onDownload }: SocialShareModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [fallbackMode, setFallbackMode] = useState(false);
+
+  // 1. FIXED LOCATION BUG
+  // Ensures location/venue fallback correctly to prevent "undefined"
+  const locationString = event.venue || event.location || 'the venue';
+  const eventDates = event.dates || '';
+  
+  // Clean generated string
+  const defaultShareText = `I'm attending ${event.name} ${eventDates ? `this ${eventDates}` : ''} at ${locationString}! Looking forward to connecting. #${event.name.replace(/\s+/g, '')}`;
+  
+  const [shareText, setShareText] = useState(defaultShareText);
+
+  useEffect(() => {
+    // Check if the current browser supports Web Share Level 2 (File Sharing)
+    if (!navigator.canShare || !navigator.share) {
+      setFallbackMode(true);
+    }
+  }, []);
 
   if (!isOpen) return null;
-  const viralCopy = `I'm attending ${event.name} this ${event.dates} in ${event.location}! Looking forward to connecting. #${event.slug.replace('-', '')}`;
 
-  const trackShare = async (platform: string) => {
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text', err);
+    }
+  };
+
+  const logShareToBackend = (platform: string) => {
     if (!badge.leadId) return;
-    await fetch(`/api/badges/${badge.leadId}/track`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    fetch(`/api/badges/${badge.leadId}/track`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'share', platform })
     }).catch(console.error);
   };
 
-  const shareLink = (url: string, platform: string) => {
-    confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
-    trackShare(platform);
-    window.open(url, '_blank', 'width=600,height=600');
+  // 2. MODERN NATIVE WEB SHARE (BUNDLES IMAGE + TEXT)
+  const handleNativeShare = async (platform: string) => {
+    if (isSharing) return;
+    
+    // If browser doesn't support native sharing, use the fallback UI
+    if (fallbackMode || !canvasRef.current) {
+      handleCopyText();
+      onDownload();
+      logShareToBackend(platform);
+      return;
+    }
+
+    setIsSharing(true);
+    
+    try {
+      // 3. Convert Canvas to a native File Blob
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvasRef.current?.toBlob(resolve, 'image/jpeg', 0.95);
+      });
+
+      if (!blob) throw new Error("Could not generate image blob");
+
+      const file = new File([blob], `${badge.name || 'attendee'}-badge.jpg`, { type: 'image/jpeg' });
+      
+      const shareData = {
+        title: `My ${event.name} Badge`,
+        text: shareText,
+        files: [file] // <--- THIS ATTACHES THE IMAGE TO THE POST
+      };
+
+      // Ensure the browser can handle this specific payload
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share(shareData);
+        logShareToBackend(platform);
+      } else {
+        // Fallback for browsers that support 'share' but NOT 'files' (e.g. older Androids)
+        await navigator.share({
+          title: `My ${event.name} Badge`,
+          text: shareText,
+        });
+        // Auto-download the image so they can attach it manually
+        onDownload();
+        logShareToBackend(platform);
+      }
+    } catch (err: any) {
+      // User cancelled or share failed
+      if (err.name !== 'AbortError') {
+        console.error("Native share failed:", err);
+      }
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+        
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <h3 className="text-base font-bold text-slate-900">Share Your Badge</h3>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Share2 className="h-5 w-5 text-teal-600" /> Share Your Badge
+          </h3>
+          <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 transition-colors">
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        <div className="p-6 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button onClick={() => shareLink(`https://www.linkedin.com/sharing/share-offsite/?url=${event.website}`, 'LinkedIn')} className="flex items-center justify-center space-x-2 rounded-xl bg-[#0a66c2] text-white px-4 py-3 font-semibold text-xs"><Linkedin className="h-4 w-4 fill-white" /><span>Share to LinkedIn</span></button>
-            <button onClick={() => shareLink(`https://twitter.com/intent/tweet?text=${encodeURIComponent(viralCopy)}`, 'X')} className="flex items-center justify-center space-x-2 rounded-xl bg-slate-900 text-white px-4 py-3 font-semibold text-xs"><Twitter className="h-4 w-4 fill-white" /><span>Post to X</span></button>
-            <button onClick={() => shareLink(`https://api.whatsapp.com/send?text=${encodeURIComponent(viralCopy)}`, 'WhatsApp')} className="flex items-center justify-center space-x-2 rounded-xl bg-[#25D366] text-white px-4 py-3 font-semibold text-xs"><MessageCircle className="h-4 w-4 fill-white" /><span>Send WhatsApp</span></button>
+        <div className="p-6 space-y-6">
+          
+          {/* Main Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              disabled={isSharing}
+              onClick={() => handleNativeShare('LinkedIn')}
+              className="flex items-center justify-center space-x-2 rounded-xl bg-[#0a66c2] px-4 py-3 text-sm font-bold text-white hover:bg-[#084e96] transition-colors shadow-md disabled:opacity-70"
+            >
+              <span>{fallbackMode ? 'Copy & Download for LinkedIn' : 'Share to LinkedIn'}</span>
+            </button>
+            <button
+              disabled={isSharing}
+              onClick={() => handleNativeShare('WhatsApp')}
+              className="flex items-center justify-center space-x-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white hover:bg-[#1da851] transition-colors shadow-md disabled:opacity-70"
+            >
+              <span>{fallbackMode ? 'Copy & Download for WhatsApp' : 'Send WhatsApp'}</span>
+            </button>
           </div>
 
-          <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-700 font-normal">
-            {viralCopy}
+          {/* Desktop Fallback Warning */}
+          {fallbackMode && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <p>Your browser doesn't support direct image sharing. Clicking a share button above will <strong>copy your text</strong> and <strong>download the image</strong> so you can easily paste both into the app!</p>
+            </div>
+          )}
+
+          {/* Text Editor */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 block flex justify-between items-end">
+              <span>Customize Your Post</span>
+              <button 
+                onClick={handleCopyText}
+                className="flex items-center gap-1 text-teal-600 hover:text-teal-700 bg-teal-50 px-2 py-1 rounded-md transition-colors"
+              >
+                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                <span>{copied ? 'Copied!' : 'Copy Text'}</span>
+              </button>
+            </label>
+            <textarea
+              value={shareText}
+              onChange={(e) => setShareText(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-colors resize-none h-28"
+            />
           </div>
+
         </div>
+
+        {/* Footer */}
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-between items-center">
+          <p className="text-[11px] font-medium text-slate-500">
+            {event.name} • {new Date().getFullYear()}
+          </p>
+          <button 
+            onClick={onDownload}
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <Download className="w-3.5 h-3.5" /> Just Download Image
+          </button>
+        </div>
+
       </div>
     </div>
   );
