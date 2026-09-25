@@ -1,15 +1,25 @@
-import React, { useState, useEffect,  } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Search, Trash2, X, Key } from 'lucide-react';
 import { AdminRole } from '../../types';
-
 
 const getInitials = (name: string) => {
   const parts = name.trim().split(' ').filter(p => p.length > 0);
   return parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : name.substring(0, 2).toUpperCase();
 };
 
+// Helper to safely extract the logged-in user's ID from the JWT token
+const getLoggedInUserId = () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.id;
+  } catch (e) {
+    return null;
+  }
+};
+
 export function TeamManagement() {
-  
   const [members, setMembers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   
@@ -25,6 +35,8 @@ export function TeamManagement() {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
+
+  const currentUserId = getLoggedInUserId();
 
   // Logout Helper
   const forceLogout = () => {
@@ -207,10 +219,13 @@ export function TeamManagement() {
                         <button onClick={() => openPasswordModal(member)} className="text-slate-400 hover:text-teal-600 p-1" title="Change Password">
                           <Key className="h-4 w-4" />
                         </button>
-                        {/* Remove Member Button */}
-                        <button onClick={() => handleRemoveMember(member._id)} className="text-slate-400 hover:text-rose-600 p-1" title="Remove member">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        
+                        {/* Remove Member Button - HIDDEN IF IT IS THE CURRENT USER */}
+                        {currentUserId !== member._id && (
+                          <button onClick={() => handleRemoveMember(member._id)} className="text-slate-400 hover:text-rose-600 p-1" title="Remove member">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
