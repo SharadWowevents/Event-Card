@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Upload, Trash2, Users, Image as ImageIcon, Camera, 
-  Loader2, MapPin, Calendar, Download, Heart, Share2, X, Check
+  Loader2, MapPin, Calendar, Download, Heart, Share2, X, Check, Bookmark
 } from 'lucide-react';
 import { EventItem, AttendeeLead, EventMoment } from '../../types';
 
@@ -15,6 +15,10 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
   const [attendees, setAttendees] = useState<AttendeeLead[]>([]);
   const [moments, setMoments] = useState<EventMoment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Storage & Filter State
+  const [savedMomentIds, setSavedMomentIds] = useState<string[]>([]);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   
   // Upload State
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -38,6 +42,12 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
     setIsLoading(true);
     const eventId = event.id || event._id;
 
+    // Load saved IDs from local storage
+    const storedSavedIds = localStorage.getItem(`saved_moments_${eventId}`);
+    if (storedSavedIds) {
+      setSavedMomentIds(JSON.parse(storedSavedIds));
+    }
+
     const fetchAttendees = fetch(`${API_BASE}/events/${eventId}/leads`)
       .then(res => res.json())
       .then(data => {
@@ -57,6 +67,17 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
       .catch(err => console.error("Failed to fetch gallery data:", err))
       .finally(() => setIsLoading(false));
   }, [event, API_BASE]);
+
+  const toggleSaveMoment = (momentId: string) => {
+    setSavedMomentIds(prev => {
+      const next = prev.includes(momentId)
+        ? prev.filter(id => id !== momentId)
+        : [...prev, momentId];
+      
+      localStorage.setItem(`saved_moments_${event.id || event._id}`, JSON.stringify(next));
+      return next;
+    });
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,29 +141,34 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
     if (!window.confirm("Are you sure you want to delete this moment?")) return;
     try {
       const res = await fetch(`${API_BASE}/events/${event.id || event._id}/moments/${momentId}`, { method: 'DELETE' });
-      if (res.ok) setMoments(prev => prev.filter(m => m._id !== momentId));
+      if (res.ok) {
+        setMoments(prev => prev.filter(m => m._id !== momentId));
+        // Also remove from saved list if deleted
+        setSavedMomentIds(prev => {
+          const next = prev.filter(id => id !== momentId);
+          localStorage.setItem(`saved_moments_${event.id || event._id}`, JSON.stringify(next));
+          return next;
+        });
+      }
     } catch (err) { console.error("Delete failed", err); }
   };
 
-  // NATIVE SHARE HANDLER
   const handleShareMoment = async () => {
     if (!activeMoment) return;
 
     const shareData = {
       title: activeMoment.title,
       text: `Check out this incredible moment from ${event.name}!`,
-      url: activeMoment.imageUrl // Always points to the raw hosted image link
+      url: activeMoment.imageUrl
     };
 
     if (navigator.share) {
-      // Use native device bottom-sheet menu
       try {
         await navigator.share(shareData);
       } catch (err) {
         console.log('Share was cancelled or failed:', err);
       }
     } else {
-      // Fallback for Desktop Browsers: Copy to Clipboard
       try {
         await navigator.clipboard.writeText(activeMoment.imageUrl);
         setCopiedLink(true);
@@ -153,18 +179,20 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
     }
   };
 
-  // DOWNLOAD HANDLER
   const handleDownloadMoment = () => {
     if (!activeMoment) return;
     const link = document.createElement('a');
     link.href = activeMoment.imageUrl;
     link.target = '_blank';
-    // Append the download attribute so browsers auto-download instead of just opening a new tab
     link.download = `${activeMoment.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-hd.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  const displayedMoments = showSavedOnly 
+    ? moments.filter(m => savedMomentIds.includes(m._id))
+    : moments;
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20">
@@ -187,8 +215,8 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
         
-        {/* Tabs & Upload Button */}
-        <div className="flex items-center justify-between border-b border-slate-200 mb-8">
+        {/* Tabs & Actions */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 mb-8 gap-4">
           <div className="flex space-x-6">
             <button onClick={() => setActiveFolder('attendees')} className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-colors ${activeFolder === 'attendees' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
               <Users className="h-4 w-4" /> Attendee Badges ({attendees.length})
@@ -199,7 +227,15 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
           </div>
 
           {activeFolder === 'moments' && (
-            <div className="pb-2">
+            <div className="pb-2 flex items-center gap-3">
+              <button 
+                onClick={() => setShowSavedOnly(!showSavedOnly)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${showSavedOnly ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Bookmark className={`h-4 w-4 ${showSavedOnly ? 'fill-teal-700' : ''}`} />
+                {showSavedOnly ? 'Showing Saved' : 'Show Saved'}
+              </button>
+
               <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition-all shadow-md">
                 <Upload className="h-4 w-4" /><span className="hidden sm:inline">Upload Moment</span>
@@ -233,25 +269,40 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
 
             {activeFolder === 'moments' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {moments.length === 0 ? (
-                  <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl"><ImageIcon className="h-8 w-8 text-slate-300 mx-auto mb-2" /><p className="text-slate-500 text-sm font-medium">No moments uploaded yet.</p></div>
+                {displayedMoments.length === 0 ? (
+                  <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                    <ImageIcon className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-slate-500 text-sm font-medium">
+                      {showSavedOnly ? "You haven't saved any moments yet." : "No moments uploaded yet."}
+                    </p>
+                  </div>
                 ) : (
-                  moments.map((moment) => (
-                    <div key={moment._id} onClick={() => setActiveMoment(moment)} className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs cursor-pointer">
-                      <img src={moment.imageUrl} alt="Event Moment" className="w-full h-full object-cover" />
-                      
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 pt-8 pb-3 px-4 to-transparent translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                        <h4 className="text-white font-bold text-sm truncate mb-0.5">{moment.title}</h4>
-                        <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-semibold tracking-wide">
-                          <Users className="h-3 w-3" /> {moment.identifiedPeople.length} Tagged
-                        </div>
-                      </div>
+                  displayedMoments.map((moment) => {
+                    const isSaved = savedMomentIds.includes(moment._id);
+                    return (
+                      <div key={moment._id} onClick={() => setActiveMoment(moment)} className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs cursor-pointer">
+                        <img src={moment.imageUrl} alt="Event Moment" className="w-full h-full object-cover" />
+                        
+                        {/* Save indicator badge on the grid thumbnail */}
+                        {isSaved && (
+                          <div className="absolute top-3 left-3 bg-black/50 p-1.5 rounded-full backdrop-blur-[2px]">
+                            <Heart className="h-4 w-4 fill-emerald-400 text-emerald-400" />
+                          </div>
+                        )}
 
-                      <button onClick={(e) => handleDeleteMoment(moment._id, e)} className="absolute top-3 right-3 bg-black/50 hover:bg-rose-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[2px]" title="Delete Image">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 pt-8 pb-3 px-4 to-transparent translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                          <h4 className="text-white font-bold text-sm truncate mb-0.5">{moment.title}</h4>
+                          <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-semibold tracking-wide">
+                            <Users className="h-3 w-3" /> {moment.identifiedPeople.length} Tagged
+                          </div>
+                        </div>
+
+                        <button onClick={(e) => handleDeleteMoment(moment._id, e)} className="absolute top-3 right-3 bg-black/50 hover:bg-rose-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[2px]" title="Delete Image">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             )}
@@ -259,7 +310,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
         )}
       </div>
 
-      {/* METADATA UPLOAD MODAL */}
+      {/* METADATA UPLOAD MODAL (Unchanged) */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
@@ -284,7 +335,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
         </div>
       )}
 
-      {/* EXPANDED LIGHTBOX VIEW (Matches Screenshot UI) */}
+      {/* EXPANDED LIGHTBOX VIEW */}
       {activeMoment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 sm:p-8 animate-in fade-in duration-200">
           <button onClick={() => setActiveMoment(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 bg-slate-900/50 rounded-full transition-colors z-50"><X className="h-6 w-6" /></button>
@@ -322,7 +373,6 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
 
                <div className="space-y-3 mt-8 pt-6 border-t border-slate-700/30">
                  
-                 {/* DOWNLOAD ACTION */}
                  <button 
                    onClick={handleDownloadMoment} 
                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
@@ -331,11 +381,19 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
                  </button>
                  
                  <div className="flex gap-3">
-                   <button className="flex-1 border border-slate-600 hover:bg-slate-800 text-slate-300 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-                     <Heart className="w-4 h-4"/> Save
+                   {/* DYNAMIC SAVE BUTTON */}
+                   <button 
+                     onClick={() => toggleSaveMoment(activeMoment._id)}
+                     className={`flex-1 border font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors ${
+                       savedMomentIds.includes(activeMoment._id)
+                         ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                         : 'border-slate-600 hover:bg-slate-800 text-slate-300'
+                     }`}
+                   >
+                     <Heart className={`w-4 h-4 ${savedMomentIds.includes(activeMoment._id) ? 'fill-emerald-400 text-emerald-400' : ''}`}/> 
+                     {savedMomentIds.includes(activeMoment._id) ? 'Saved' : 'Save'}
                    </button>
 
-                   {/* SHARE ACTION */}
                    <button 
                      onClick={handleShareMoment} 
                      className="flex-1 border border-slate-600 hover:bg-slate-800 text-slate-300 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
