@@ -121,7 +121,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const updated = await Event.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // Replaced 'returnDocument: after' with standard Mongoose 'new: true'
+      returnDocument: 'after', // Replaced 'returnDocument: after' with standard Mongoose 'new: true'
       runValidators: true
     });
     if (!updated) return res.status(404).json({ error: 'Event not found' });
