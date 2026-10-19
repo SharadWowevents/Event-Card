@@ -45,7 +45,7 @@ export function SocialShareModal({ isOpen, onClose, badge, event, canvasRef, onD
   const logShareToBackend = (platform: string) => {
     if (!badge.leadId) return;
   
-    fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/badges/${badge.leadId}/track`, {
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/badges/${badge.leadId}/track`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'share', platform })

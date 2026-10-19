@@ -57,7 +57,7 @@ export function Header({
     if (!selectedEvent) return;
     const eventId = selectedEvent.id || selectedEvent._id;
 
-    fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/events/${eventId}/leads`)
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/events/${eventId}/leads`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

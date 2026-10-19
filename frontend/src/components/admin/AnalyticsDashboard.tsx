@@ -68,7 +68,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
   // Fetch real leads from the database for this specific event
   useEffect(() => {
     setIsLoading(true);
-    fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/events/${event.id || event._id}/leads`)
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/events/${event.id || event._id}/leads`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -206,7 +206,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
   }, [leads]);
 
   const fetchQueueStats = useCallback(() => {
-    fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/stats`)
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/tasks/stats`)
       .then(res => res.json())
       .then(data => {
         if (data?.stats?.totalRecoveries !== undefined) {
@@ -228,7 +228,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
     });
 
     try {
-      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/enqueue`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/tasks/enqueue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +254,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
       // Poll until task reaches completed or failed
       const pollTimer = setInterval(async () => {
         try {
-          const checkRes = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/${taskId}`);
+          const checkRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/tasks/${taskId}`);
           const task = await checkRes.json();
           if (task.status === 'completed') {
             clearInterval(pollTimer);
