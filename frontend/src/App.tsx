@@ -9,6 +9,8 @@ import { BadgeStudioPasses } from './components/admin/BadgeStudioPasses';
 import { AnalyticsDashboard } from './components/admin/AnalyticsDashboard';
 import { IntegrationsHub } from './components/admin/IntegrationsHub';
 import { TeamManagement } from './components/admin/TeamManagement';
+import { ActivityLogsView } from './components/admin/ActivityLogsView';
+import { BackupRestoreView } from './components/admin/BackupRestoreView';
 import { CreateEditEventModal } from './components/admin/CreateEditEventModal';
 import { SmartEventGallery } from './components/gallery/SmartEventGallery';
 import { Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
@@ -65,6 +67,9 @@ export default function App() {
     } catch {}
     return { name: 'Master Admin', role: 'Superadmin', email: 'admin@eventcards.io' };
   });
+
+  const userRole = (currentUser?.role || 'Superadmin').trim();
+  const isSuperAdmin = userRole.toLowerCase().replace(/[\s_-]+/g, '') === 'superadmin';
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -453,6 +458,7 @@ export default function App() {
           onToggleMobileMenu={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           onLaunchStudio={handleLaunchStudio}
           isDark={isDark}
+          user={currentUser}
         />
 
         <main className="flex-1 pb-12">
@@ -503,6 +509,50 @@ export default function App() {
 
           {currentAdminView === 'admin-team' && (
             <TeamManagement />
+          )}
+
+          {currentAdminView === 'admin-logs' && (
+            isSuperAdmin ? (
+              <ActivityLogsView isDark={isDark} />
+            ) : (
+              <div className="p-8 max-w-lg mx-auto my-16 text-center rounded-3xl border border-rose-500/20 bg-rose-500/5 animate-fade-in">
+                <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 w-fit mx-auto mb-4">
+                  <Lock className="h-8 w-8" />
+                </div>
+                <h2 className="text-xl font-bold text-rose-500">Super Admin Access Only</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                  Activity Audit Logs and Undo operations are restricted. Only users with the <strong>Superadmin</strong> role can view or roll back activities.
+                </p>
+                <button
+                  onClick={() => setCurrentAdminView('admin-events')}
+                  className="mt-6 px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all"
+                >
+                  Return to Campaigns
+                </button>
+              </div>
+            )
+          )}
+
+          {currentAdminView === 'admin-backups' && (
+            isSuperAdmin ? (
+              <BackupRestoreView isDark={isDark} />
+            ) : (
+              <div className="p-8 max-w-lg mx-auto my-16 text-center rounded-3xl border border-rose-500/20 bg-rose-500/5 animate-fade-in">
+                <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 w-fit mx-auto mb-4">
+                  <Lock className="h-8 w-8" />
+                </div>
+                <h2 className="text-xl font-bold text-rose-500">Super Admin Access Only</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                  Database Snapshots, Recurring Schedules, and Non-Destructive Restore are restricted. Only users with the <strong>Superadmin</strong> role can manage backups.
+                </p>
+                <button
+                  onClick={() => setCurrentAdminView('admin-events')}
+                  className="mt-6 px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all"
+                >
+                  Return to Campaigns
+                </button>
+              </div>
+            )
           )}
         </main>
       </div>

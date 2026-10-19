@@ -3,7 +3,7 @@ import {
   Calendar, Layers, BarChart3, Users, Share2, Settings, LogOut, 
   Sun, Moon, ChevronLeft, ChevronRight, ChevronsUpDown, Check, Plus, 
   ExternalLink, Shield, Workflow, TrendingUp, Ticket, Flame, 
-  BadgePercent, Eye, ShieldCheck, Compass, Sparkles
+  BadgePercent, Eye, ShieldCheck, Compass, Sparkles, History, Database
 } from 'lucide-react';
 import { EventItem } from '../../types';
 
@@ -91,19 +91,32 @@ export function Sidebar({
     }
   ];
 
+  const userRole = (currentUser?.role || 'Superadmin').trim();
+  const isSuperAdmin = userRole.toLowerCase().replace(/[\s_-]+/g, '') === 'superadmin';
+
   const platformNav = [
-    // {
-    //   id: 'admin-integrations',
-    //   label: 'Integrations & CRM',
-    //   icon: Workflow,
-    //   description: 'HubSpot, Zapier, Webhooks'
-    // },
     {
       id: 'admin-team',
       label: 'Team & Permissions',
       icon: ShieldCheck,
       description: 'RBAC & collaborators'
-    }
+    },
+    ...(isSuperAdmin ? [
+      {
+        id: 'admin-logs',
+        label: 'Activity Logs',
+        icon: History,
+        badge: '500',
+        description: 'Audit logs with undo'
+      },
+      {
+        id: 'admin-backups',
+        label: 'Backup & Restore',
+        icon: Database,
+        badge: 'Auto',
+        description: 'Manual & auto snapshots'
+      }
+    ] : [])
   ];
 
   return (

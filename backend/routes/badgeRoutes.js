@@ -3,6 +3,7 @@ const router = express.Router();
 const Lead = require('../models/Lead');
 const Event = require('../models/Event');
 const taskQueue = require('../services/taskQueue');
+const activityLogger = require('../services/activityLogger');
 
 // CPM Benchmark ($28.50 per 1k impressions, ~115 impressions/share)
 const CPM_BENCHMARK = 28.50;
@@ -40,7 +41,18 @@ router.post('/', async (req, res) => {
     event.postersCount += 1;
     await event.save();
 
-    // 3. Asynchronously enqueue background composite and analytics processing
+    // 3. Log activity for audit and undo
+    await activityLogger.log({
+      action: 'CREATE_LEAD',
+      entityType: 'Lead',
+      entityId: lead._id,
+      description: `Registered attendee pass for "${lead.name}" (${event.name})`,
+      performedBy: lead.name || 'Attendee',
+      newState: lead.toObject(),
+      canUndo: true
+    });
+
+    // 4. Asynchronously enqueue background composite and analytics processing
     taskQueue.enqueue('PROCESS_BADGE_COMPOSITE', {
       leadId: lead._id,
       eventId: event._id,

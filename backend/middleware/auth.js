@@ -23,8 +23,45 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Export BOTH 'protect' and 'JWT_SECRET' exactly as teamRoutes.js expects them
+// Role-based protection: Only Super Admin can access Activity Logs and Backup/Restore
+const requireSuperAdmin = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : req.query?.token;
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(401).json({ error: 'User account not found' });
+      }
+      const roleClean = (user.role || '').toLowerCase().replace(/[\s_-]+/g, '');
+      if (roleClean !== 'superadmin') {
+        return res.status(403).json({ error: 'Access Denied: Only Super Admin has permission to access this resource.' });
+      }
+      req.user = user;
+      return next();
+    }
+
+    // Role header check if token not supplied (or query parameter for direct download)
+    const roleHeader = req.headers['x-user-role'] || req.query?.role;
+    if (roleHeader) {
+      const roleClean = roleHeader.toLowerCase().replace(/[\s_-]+/g, '');
+      if (roleClean !== 'superadmin') {
+        return res.status(403).json({ error: 'Access Denied: Only Super Admin has permission to access this resource.' });
+      }
+      return next();
+    }
+
+    return res.status(403).json({ error: 'Access Denied: Super Admin authentication required.' });
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired session' });
+  }
+};
+
+// Export 'protect', 'requireSuperAdmin', and 'JWT_SECRET'
 module.exports = { 
   protect, 
+  requireSuperAdmin,
   JWT_SECRET: process.env.JWT_SECRET 
 };

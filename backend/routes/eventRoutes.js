@@ -4,6 +4,7 @@ const Event = require('../models/Event');
 const Lead = require('../models/Lead');
 const Moment = require('../models/Moment');
 const taskQueue = require('../services/taskQueue');
+const activityLogger = require('../services/activityLogger');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -112,6 +113,17 @@ router.post('/', async (req, res) => {
 
     const event = new Event({ ...req.body, slug: generatedSlug });
     await event.save();
+
+    await activityLogger.log({
+      action: 'CREATE_EVENT',
+      entityType: 'Event',
+      entityId: event._id,
+      description: `Created campaign event "${event.name}" (/${event.slug})`,
+      performedBy: req.body.performedBy || 'Admin',
+      newState: event.toObject(),
+      canUndo: true
+    });
+
     res.status(201).json(event);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -121,11 +133,25 @@ router.post('/', async (req, res) => {
 // Update Event
 router.put('/:id', async (req, res) => {
   try {
+    const previous = await Event.findById(req.params.id);
+    if (!previous) return res.status(404).json({ error: 'Event not found' });
+
     const updated = await Event.findByIdAndUpdate(req.params.id, req.body, {
-      returnDocument: 'after', // Replaced 'returnDocument: after' with standard Mongoose 'new: true'
+      returnDocument: 'after',
       runValidators: true
     });
-    if (!updated) return res.status(404).json({ error: 'Event not found' });
+
+    await activityLogger.log({
+      action: 'UPDATE_EVENT',
+      entityType: 'Event',
+      entityId: updated._id,
+      description: `Updated event settings / configuration for "${updated.name}"`,
+      performedBy: req.body.performedBy || 'Admin',
+      previousState: previous.toObject(),
+      newState: updated.toObject(),
+      canUndo: true
+    });
+
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });

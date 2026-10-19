@@ -8,7 +8,11 @@ const eventRoutes = require('./routes/eventRoutes');
 const badgeRoutes = require('./routes/badgeRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const logRoutes = require('./routes/logRoutes');
+const backupRoutes = require('./routes/backupRoutes');
 const taskQueue = require('./services/taskQueue');
+const activityLogger = require('./services/activityLogger');
+const backupService = require('./services/backupService');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -19,9 +23,11 @@ app.use(cors());
 // Increased body limit to accept high-resolution webcam snapshots (base64 data URIs)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Connect to MongoDB & Initialize Crash-Resilient Task Queue
+// Connect to MongoDB & Initialize Engines
 connectDB().then(() => {
   taskQueue.start();
+  activityLogger.seedInitialLogs();
+  backupService.initScheduler();
 });
 
 // Routes
@@ -29,6 +35,8 @@ app.use('/api/events', eventRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/logs', logRoutes);
+app.use('/api/backups', backupRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

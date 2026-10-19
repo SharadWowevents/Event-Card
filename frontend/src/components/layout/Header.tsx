@@ -3,7 +3,7 @@ import {
   Search, Bell, Sparkles, Plus, ExternalLink, Menu, X, 
   HelpCircle, ChevronDown, Check, ShieldAlert, Layers,
   TrendingUp, Ticket, ShieldCheck, User, Calendar, CheckCheck,
-  Clock, ArrowRight, CheckCircle2
+  Clock, ArrowRight, CheckCircle2, History, Database
 } from 'lucide-react';
 import { EventItem } from '../../types';
 
@@ -18,6 +18,7 @@ interface HeaderProps {
   onToggleMobileMenu?: () => void;
   onLaunchStudio?: (event: EventItem) => void;
   isDark?: boolean;
+  user?: { name?: string; email?: string; role?: string } | null;
 }
 
 interface NotificationItem {
@@ -40,7 +41,8 @@ export function Header({
   onLogout,
   onToggleMobileMenu,
   onLaunchStudio,
-  isDark
+  isDark,
+  user
 }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -150,10 +152,17 @@ export function Header({
     };
   }, []);
 
+  const userRole = (user?.role || 'Superadmin').trim();
+  const isSuperAdmin = userRole.toLowerCase().replace(/[\s_-]+/g, '') === 'superadmin';
+
   // Quick Action Navigation definitions
   const quickActions = [
     { id: 'create', label: 'Create New Campaign', icon: Plus, action: () => onOpenCreateEventModal() },
     { id: 'analytics', label: 'Pass & Advocacy Analytics', icon: TrendingUp, action: () => onSelectView('admin-analytics') },
+    ...(isSuperAdmin ? [
+      { id: 'logs', label: 'Activity Logs & Undo (Last 500)', icon: History, action: () => onSelectView('admin-logs') },
+      { id: 'backups', label: 'Backup & Restore Center', icon: Database, action: () => onSelectView('admin-backups') }
+    ] : []),
     { id: 'gallery', label: 'Moments Photo Gallery', icon: Layers, action: () => onSelectView('gallery') },
     { id: 'passes', label: 'Badge Studio Passes', icon: Ticket, action: () => onSelectView('admin-passes') },
     { id: 'team', label: 'Team & Permissions', icon: ShieldCheck, action: () => onSelectView('admin-team') },
