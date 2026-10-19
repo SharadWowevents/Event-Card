@@ -196,19 +196,19 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
     : moments;
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20">
+    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-20 transition-colors">
       
       {/* Header */}
-      <div className="border-b border-slate-200/80 bg-white sticky top-0 z-20">
+      <div className="border-b border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-4">
-          <button onClick={onNavigateToStudio} className="mb-4 inline-flex items-center space-x-1.5 text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors">
+          <button onClick={onNavigateToStudio} className="mb-4 inline-flex items-center space-x-1.5 text-sm font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors">
             <ArrowLeft className="h-4 w-4" /><span>Back to Organizer Dashboard</span>
           </button>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <div className="flex items-center space-x-2 mb-2"><span className="rounded-md bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700">Gallery Media</span></div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">{event.name} Gallery</h1>
-              <p className="mt-1 text-sm text-slate-500">Manage uploaded moments and generated attendee badges.</p>
+              <div className="flex items-center space-x-2 mb-2"><span className="rounded-md bg-sky-100 dark:bg-sky-950/60 dark:border dark:border-sky-800/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">Gallery Media</span></div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{event.name} Gallery</h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage uploaded moments and generated attendee badges.</p>
             </div>
           </div>
         </div>
@@ -217,12 +217,12 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
         
         {/* Tabs & Actions */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-white/10 mb-8 gap-4">
           <div className="flex space-x-6">
-            <button onClick={() => setActiveFolder('attendees')} className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-colors ${activeFolder === 'attendees' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            <button onClick={() => setActiveFolder('attendees')} className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-colors ${activeFolder === 'attendees' ? 'border-teal-600 text-teal-800 dark:border-teal-400 dark:text-teal-300' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
               <Users className="h-4 w-4" /> Attendee Badges ({attendees.length})
             </button>
-            <button onClick={() => setActiveFolder('moments')} className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-colors ${activeFolder === 'moments' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            <button onClick={() => setActiveFolder('moments')} className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-colors ${activeFolder === 'moments' ? 'border-teal-600 text-teal-800 dark:border-teal-400 dark:text-teal-300' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
               <ImageIcon className="h-4 w-4" /> Event Moments ({moments.length})
             </button>
           </div>
@@ -231,14 +231,14 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
             <div className="pb-2 flex items-center gap-3">
               <button 
                 onClick={() => setShowSavedOnly(!showSavedOnly)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${showSavedOnly ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${showSavedOnly ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300' : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
               >
-                <Bookmark className={`h-4 w-4 ${showSavedOnly ? 'fill-teal-700' : ''}`} />
+                <Bookmark className={`h-4 w-4 ${showSavedOnly ? 'fill-teal-700 dark:fill-teal-400' : ''}`} />
                 {showSavedOnly ? 'Showing Saved' : 'Show Saved'}
               </button>
 
               <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition-all shadow-md">
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-slate-900 dark:bg-teal-600 text-white dark:hover:bg-teal-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition-all shadow-md">
                 <Upload className="h-4 w-4" /><span className="hidden sm:inline">Upload Moment</span>
               </button>
             </div>
@@ -253,10 +253,10 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
             {activeFolder === 'attendees' && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 {attendees.length === 0 ? (
-                  <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl"><Camera className="h-8 w-8 text-slate-300 mx-auto mb-2" /><p className="text-slate-500 text-sm font-medium">No attendee badges generated yet.</p></div>
+                  <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"><Camera className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" /><p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No attendee badges generated yet.</p></div>
                 ) : (
                   attendees.map((attendee) => (
-                    <div key={attendee.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs">
+                    <div key={attendee.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-xs">
                       <img src={getMediaUrl(attendee.badgeThumbnail)} alt={attendee.name} className="w-full h-full object-cover" />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 to-transparent p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
                         <p className="text-white font-bold text-sm truncate">{attendee.name}</p>
@@ -271,9 +271,9 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
             {activeFolder === 'moments' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayedMoments.length === 0 ? (
-                  <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
-                    <ImageIcon className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-500 text-sm font-medium">
+                  <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <ImageIcon className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
                       {showSavedOnly ? "You haven't saved any moments yet." : "No moments uploaded yet."}
                     </p>
                   </div>
@@ -281,7 +281,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
                   displayedMoments.map((moment) => {
                     const isSaved = savedMomentIds.includes(moment._id);
                     return (
-                      <div key={moment._id} onClick={() => setActiveMoment(moment)} className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs cursor-pointer">
+                      <div key={moment._id} onClick={() => setActiveMoment(moment)} className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-xs cursor-pointer">
                         <img src={getMediaUrl(moment.imageUrl)} alt="Event Moment" className="w-full h-full object-cover" />
                         
                         {/* Save indicator badge on the grid thumbnail */}
@@ -311,26 +311,26 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
         )}
       </div>
 
-      {/* METADATA UPLOAD MODAL (Unchanged) */}
+      {/* METADATA UPLOAD MODAL */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
-            <div className="md:w-2/5 bg-slate-100 flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-r border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+            <div className="md:w-2/5 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10">
               <img src={uploadImageBase64} alt="Preview" className="w-full h-full object-cover" />
             </div>
             <form onSubmit={submitUpload} className="flex-1 p-6 overflow-y-auto space-y-4">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-lg text-slate-900">Add Photo Details</h3>
-                <button type="button" onClick={() => setUploadModalOpen(false)} className="text-slate-400 hover:text-slate-700"><X className="h-5 w-5" /></button>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white">Add Photo Details</h3>
+                <button type="button" onClick={() => setUploadModalOpen(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><X className="h-5 w-5" /></button>
               </div>
-              <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Photo Title</label><input type="text" value={uploadForm.title} onChange={(e) => setUploadForm({...uploadForm, title: e.target.value})} placeholder="e.g. Keynote Opening" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm" /></div>
+              <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Photo Title</label><input type="text" value={uploadForm.title} onChange={(e) => setUploadForm({...uploadForm, title: e.target.value})} placeholder="e.g. Keynote Opening" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Location</label><input type="text" value={uploadForm.location} onChange={(e) => setUploadForm({...uploadForm, location: e.target.value})} placeholder="e.g. Breakout Hall 4" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm" /></div>
-                <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Time Label</label><input type="text" value={uploadForm.timeString} onChange={(e) => setUploadForm({...uploadForm, timeString: e.target.value})} placeholder="e.g. Day 2 • 10:20 AM" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm" /></div>
+                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Location</label><input type="text" value={uploadForm.location} onChange={(e) => setUploadForm({...uploadForm, location: e.target.value})} placeholder="e.g. Breakout Hall 4" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" /></div>
+                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Time Label</label><input type="text" value={uploadForm.timeString} onChange={(e) => setUploadForm({...uploadForm, timeString: e.target.value})} placeholder="e.g. Day 2 • 10:20 AM" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" /></div>
               </div>
-              <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Photographer Credit</label><input type="text" value={uploadForm.credit} onChange={(e) => setUploadForm({...uploadForm, credit: e.target.value})} placeholder="e.g. Marcus Chen" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm" /></div>
-              <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Tagged People (Comma Separated)</label><input type="text" value={uploadForm.identifiedPeople} onChange={(e) => setUploadForm({...uploadForm, identifiedPeople: e.target.value})} placeholder="e.g. Liam O'Connor, Elena Rostova" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm" /></div>
-              <div className="pt-4 flex justify-end gap-3"><button type="button" onClick={() => setUploadModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button><button type="submit" disabled={isUploading} className="flex items-center gap-2 bg-teal-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-teal-700 disabled:opacity-70">{isUploading && <Loader2 className="h-4 w-4 animate-spin"/>} Save Moment</button></div>
+              <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Photographer Credit</label><input type="text" value={uploadForm.credit} onChange={(e) => setUploadForm({...uploadForm, credit: e.target.value})} placeholder="e.g. Marcus Chen" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" /></div>
+              <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tagged People (Comma Separated)</label><input type="text" value={uploadForm.identifiedPeople} onChange={(e) => setUploadForm({...uploadForm, identifiedPeople: e.target.value})} placeholder="e.g. Liam O'Connor, Elena Rostova" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" /></div>
+              <div className="pt-4 flex justify-end gap-3"><button type="button" onClick={() => setUploadModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button><button type="submit" disabled={isUploading} className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md disabled:opacity-70 transition-all">{isUploading && <Loader2 className="h-4 w-4 animate-spin"/>} Save Moment</button></div>
             </form>
           </div>
         </div>

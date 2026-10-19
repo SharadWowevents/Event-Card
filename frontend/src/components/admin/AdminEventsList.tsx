@@ -96,7 +96,7 @@ export function AdminEventsList({
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Advocacy Lifecycle Controller</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Campaign Management & Live Summits
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -110,7 +110,7 @@ export function AdminEventsList({
               className={`h-10 px-4 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all ${
                 statusFilter === 'active'
                   ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                  : 'bg-slate-50 dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'bg-white dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               <Filter className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function AdminEventsList({
             </button>
             <button
               onClick={handleExportSummaryCsv}
-              className="h-10 px-4 rounded-xl border bg-slate-50 dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-2 transition-all"
+              className="h-10 px-4 rounded-xl border bg-white dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-2 transition-all"
             >
               <Download className="h-4 w-4" />
               <span>Export CSV</span>
@@ -150,7 +150,7 @@ export function AdminEventsList({
             </span>
           </div>
           <div className="flex items-baseline gap-2 my-1">
-            <span className="text-3xl font-extrabold tracking-tight">
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               {activeEventsCount}
             </span>
             <span className="text-sm font-semibold text-slate-400">
@@ -162,7 +162,7 @@ export function AdminEventsList({
               <TrendingUp className="h-3.5 w-3.5" />
               +12% MoM pacing
             </span>
-            <span>{draftEventsCount} in review</span>
+            <span className="text-slate-400">{draftEventsCount} in review</span>
           </div>
         </div>
 
@@ -179,7 +179,7 @@ export function AdminEventsList({
             </div>
           </div>
           <div className="flex items-baseline gap-2 my-1">
-            <span className="text-3xl font-extrabold tracking-tight font-mono">
+            <span className="text-3xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-white">
               {totalPosters.toLocaleString()}
             </span>
             <span className="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-400 text-[10px] font-bold font-mono">
@@ -195,7 +195,7 @@ export function AdminEventsList({
               <span className="w-1.5 h-3 rounded bg-emerald-500" />
               <span className="w-1.5 h-3.5 rounded bg-emerald-500" />
             </div>
-            <span>Target 50,000 passes</span>
+            <span className="text-slate-400">Target 50,000 passes</span>
           </div>
         </div>
 
@@ -212,7 +212,7 @@ export function AdminEventsList({
             </span>
           </div>
           <div className="flex items-baseline gap-2 my-1">
-            <span className="text-3xl font-extrabold tracking-tight font-mono">
+            <span className="text-3xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-white">
               {totalShares.toLocaleString()}
             </span>
             <span className="text-xs text-slate-400">shares</span>
@@ -384,13 +384,13 @@ export function AdminEventsList({
 
                   {/* Metric Pills */}
                   <div className="grid grid-cols-2 gap-2 mt-4 text-center">
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700">
-                      <div className="text-[10px] text-slate-500 font-semibold uppercase">Posters Claimed</div>
-                      <div className="font-mono font-bold text-sm mt-0.5">{evt.postersCount || 0}</div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">Posters Claimed</div>
+                      <div className="font-mono font-bold text-sm mt-0.5 text-slate-900 dark:text-white">{evt.postersCount || 0}</div>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700">
-                      <div className="text-[10px] text-slate-500 font-semibold uppercase">Total Shares</div>
-                      <div className="font-mono font-bold text-sm mt-0.5">{evt.sharesCount || 0}</div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">Total Shares</div>
+                      <div className="font-mono font-bold text-sm mt-0.5 text-slate-900 dark:text-white">{evt.sharesCount || 0}</div>
                     </div>
                   </div>
                 </div>

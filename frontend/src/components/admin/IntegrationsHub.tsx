@@ -76,19 +76,19 @@ export function IntegrationsHub() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20">
+    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-20 transition-colors">
       
       {/* Top Header */}
-      <div className="border-b border-slate-200/80 bg-white">
+      <div className="border-b border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="inline-flex items-center space-x-2 rounded-full bg-amber-50 border border-amber-200/60 px-3 py-1 text-xs font-semibold text-amber-800 mb-2">
-            <Plug className="h-3.5 w-3.5 text-amber-600" />
+          <div className="inline-flex items-center space-x-2 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 px-3 py-1 text-xs font-semibold text-amber-800 dark:text-amber-300 mb-2">
+            <Plug className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
             <span>Enterprise Pipeline Sync</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Integrations & CRM Workflows
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-2xl">
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
             Automatically dispatch attendee-generated badge data, speaker credentials, and viral attribution leads into your registration and CRM systems.
           </p>
         </div>
@@ -101,13 +101,13 @@ export function IntegrationsHub() {
           {integrations.map((svc) => (
             <div
               key={svc.id}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+              className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
             >
               <div className="space-y-4">
                 
                 {/* Header: Category & Status */}
                 <div className="flex items-center justify-between">
-                  <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                  <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                     {svc.category}
                   </span>
 
@@ -115,7 +115,7 @@ export function IntegrationsHub() {
                   <div className="flex items-center space-x-2">
                     <span
                       className={`inline-flex items-center gap-1 text-xs font-bold ${
-                        svc.status === 'connected' ? 'text-emerald-600' : 'text-slate-400'
+                        svc.status === 'connected' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
                       }`}
                     >
                       {svc.status === 'connected' && <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -124,7 +124,7 @@ export function IntegrationsHub() {
                     <button
                       onClick={() => handleToggleConnection(svc.id)}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                        svc.status === 'connected' ? 'bg-teal-600' : 'bg-slate-200'
+                        svc.status === 'connected' ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'
                       }`}
                     >
                       <span
@@ -138,28 +138,28 @@ export function IntegrationsHub() {
 
                 {/* Service Name & Description */}
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">{svc.name}</h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">{svc.name}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                     {svc.description}
                   </p>
                 </div>
 
                 {/* Metadata */}
-                <div className="rounded-xl bg-slate-50 p-3 border border-slate-100 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-slate-500">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 border border-slate-100 dark:border-white/5 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <span>Sync Cadence</span>
-                    <span className="font-semibold text-slate-800">{svc.syncFrequency || 'Real-time'}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{svc.syncFrequency || 'Real-time'}</span>
                   </div>
                   {svc.recordsSynced !== undefined && (
-                    <div className="flex items-center justify-between text-slate-500">
+                    <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                       <span>Records Synced</span>
-                      <span className="font-mono font-bold text-teal-600">{svc.recordsSynced.toLocaleString()}</span>
+                      <span className="font-mono font-bold text-teal-600 dark:text-teal-400">{svc.recordsSynced.toLocaleString()}</span>
                     </div>
                   )}
                   {svc.lastSync && (
-                    <div className="flex items-center justify-between text-slate-500">
+                    <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                       <span>Last Dispatch</span>
-                      <span className="text-[11px] text-slate-600">{svc.lastSync}</span>
+                      <span className="text-[11px] text-slate-600 dark:text-slate-300">{svc.lastSync}</span>
                     </div>
                   )}
                 </div>
@@ -167,10 +167,10 @@ export function IntegrationsHub() {
               </div>
 
               {/* Action */}
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-4 mt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between">
                 <button
                   onClick={() => handleOpenConfig(svc)}
-                  className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-teal-700 transition-colors"
+                  className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-400 transition-colors"
                 >
                   <Settings className="h-3.5 w-3.5 text-slate-400" />
                   <span>Configure API & Mapping</span>
@@ -189,25 +189,25 @@ export function IntegrationsHub() {
 
       {/* Configuration Modal */}
       {selectedService && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 px-6 py-4">
               <div className="flex items-center space-x-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400">
                   <Key className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     Configure {selectedService.name}
                   </h3>
-                  <p className="text-xs text-slate-500">API Credentials & Sync Preferences</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">API Credentials & Sync Preferences</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedService(null)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -217,7 +217,7 @@ export function IntegrationsHub() {
             <div className="p-6 space-y-4">
               
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                   API Key / Access Token
                 </label>
                 <input
@@ -225,7 +225,7 @@ export function IntegrationsHub() {
                   value={apiKeyInput}
                   onChange={(e) => setApiKeyInput(e.target.value)}
                   placeholder="e.g. pat-na1-482a-992384-secret"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs font-mono text-slate-900 focus:bg-white focus:border-teal-500 focus:outline-hidden"
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800 px-3.5 py-2 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-teal-500 focus:outline-hidden"
                 />
                 <p className="text-[11px] text-slate-400">
                   Encrypted at rest with AES-256 GCM enterprise key management.
@@ -233,41 +233,41 @@ export function IntegrationsHub() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                   Sync Frequency
                 </label>
                 <select
                   value={syncFreq}
                   onChange={(e) => setSyncFreq(e.target.value as 'Real-time' | 'Hourly' | 'Daily')}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs font-semibold text-slate-800"
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200"
                 >
-                  <option value="Real-time">Real-time (Webhook Trigger on Download)</option>
-                  <option value="Hourly">Hourly Batch Sync</option>
-                  <option value="Daily">Daily Summary Digest</option>
+                  <option value="Real-time" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">Real-time (Webhook Trigger on Download)</option>
+                  <option value="Hourly" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">Hourly Batch Sync</option>
+                  <option value="Daily" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">Daily Summary Digest</option>
                 </select>
               </div>
 
               {/* Field Mapping Preview */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs space-y-2">
-                <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block">
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-slate-800/50 p-3 text-xs space-y-2">
+                <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wider block">
                   Automated Contact Field Mapping:
                 </span>
-                <div className="space-y-1 text-slate-600 font-mono text-[11px]">
+                <div className="space-y-1 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
                   <div className="flex justify-between">
                     <span>Attendee Full Name</span>
-                    <span className="text-teal-700">→ contact.firstname / lastname</span>
+                    <span className="text-teal-700 dark:text-teal-400">→ contact.firstname / lastname</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Work Email</span>
-                    <span className="text-teal-700">→ contact.email</span>
+                    <span className="text-teal-700 dark:text-teal-400">→ contact.email</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Advocacy Role</span>
-                    <span className="text-teal-700">→ contact.event_badge_role</span>
+                    <span className="text-teal-700 dark:text-teal-400">→ contact.event_badge_role</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Generated Badge Image</span>
-                    <span className="text-teal-700">→ contact.advocacy_badge_asset_url</span>
+                    <span className="text-teal-700 dark:text-teal-400">→ contact.advocacy_badge_asset_url</span>
                   </div>
                 </div>
               </div>
@@ -278,11 +278,11 @@ export function IntegrationsHub() {
                   type="button"
                   onClick={handleTestConnection}
                   disabled={isTesting}
-                  className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors"
+                  className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors"
                 >
                   {isTesting ? (
                     <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-teal-600" />
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-teal-600 dark:text-teal-400" />
                       <span>Testing Endpoint Handshake...</span>
                     </>
                   ) : (
@@ -294,7 +294,7 @@ export function IntegrationsHub() {
                 </button>
 
                 {testSuccess === true && (
-                  <div className="mt-2 text-xs font-bold text-emerald-600 flex items-center gap-1">
+                  <div className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Connection Verified! HTTP 200 Handshake OK.</span>
                   </div>
@@ -304,11 +304,11 @@ export function IntegrationsHub() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-slate-100 bg-slate-50 px-6 py-3.5 flex items-center justify-between">
+            <div className="border-t border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-950/50 px-6 py-3.5 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setSelectedService(null)}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-white"
+                className="rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>

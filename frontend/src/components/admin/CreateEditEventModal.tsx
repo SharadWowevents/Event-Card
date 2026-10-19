@@ -237,25 +237,25 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
-      <div className={`relative w-full rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 ${activeTab === 'positioning' ? 'max-w-5xl' : 'max-w-3xl'}`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+      <div className={`relative w-full rounded-2xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 ${activeTab === 'positioning' ? 'max-w-5xl' : 'max-w-3xl'}`}>
 
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 px-6 py-4">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600"><Sparkles className="h-5 w-5" /></div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400"><Sparkles className="h-5 w-5" /></div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">{isEditing ? `Edit Event: ${name}` : 'Create New Event'}</h3>
-              <p className="text-xs text-slate-500">Configure brand styling and templates</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">{isEditing ? `Edit Event: ${name}` : 'Create New Event'}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Configure brand styling and templates</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><X className="h-5 w-5" /></button>
         </div>
 
-        <div className="flex items-center border-b border-slate-100 bg-slate-50/70 px-6 gap-2 overflow-x-auto whitespace-nowrap">
-          <button type="button" onClick={() => setActiveTab('general')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'general' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Info className="h-3.5 w-3.5" /><span>General Info & Form</span></button>
-          <button type="button" onClick={() => setActiveTab('brand')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'brand' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Palette className="h-3.5 w-3.5" /><span>Brand & Colors</span></button>
-          <button type="button" onClick={() => setActiveTab('positioning')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'positioning' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><Sliders className="h-3.5 w-3.5" /><span>Elements & Preview</span></button>
-          <button type="button" onClick={() => setActiveTab('frames')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'frames' ? 'border-teal-600 text-teal-800' : 'border-transparent text-slate-500 hover:text-slate-800'}`}><ImageIcon className="h-3.5 w-3.5" /><span>Custom Frames</span></button>
+        <div className="flex items-center border-b border-slate-100 dark:border-white/10 bg-slate-50/70 dark:bg-slate-950/40 px-6 gap-2 overflow-x-auto whitespace-nowrap">
+          <button type="button" onClick={() => setActiveTab('general')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'general' ? 'border-teal-600 text-teal-700 dark:text-teal-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}><Info className="h-3.5 w-3.5" /><span>General Info & Form</span></button>
+          <button type="button" onClick={() => setActiveTab('brand')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'brand' ? 'border-teal-600 text-teal-700 dark:text-teal-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}><Palette className="h-3.5 w-3.5" /><span>Brand & Colors</span></button>
+          <button type="button" onClick={() => setActiveTab('positioning')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'positioning' ? 'border-teal-600 text-teal-700 dark:text-teal-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}><Sliders className="h-3.5 w-3.5" /><span>Elements & Preview</span></button>
+          <button type="button" onClick={() => setActiveTab('frames')} className={`flex items-center space-x-1.5 py-3 border-b-2 text-xs font-semibold px-2 transition-colors ${activeTab === 'frames' ? 'border-teal-600 text-teal-700 dark:text-teal-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}><ImageIcon className="h-3.5 w-3.5" /><span>Custom Frames</span></button>
         </div>
 
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
@@ -263,20 +263,20 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           {activeTab === 'general' && (
             <div className="space-y-6 animate-in fade-in duration-150">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700">Event Name *</label><input type="text" required value={name} onChange={(e) => handleNameChange(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-medium focus:bg-white focus:border-teal-500 focus:outline-hidden" /></div>
-                <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Brand Slug</label><input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs font-semibold" /></div>
-                <div className="space-y-1"><label className="text-xs font-bold text-slate-700">Status</label><select value={status} onChange={(e) => setStatus(e.target.value as EventItem['status'])} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs font-semibold text-slate-800"><option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option></select></div>
-                <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700">Tagline / Theme</label><input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm" /></div>
-                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 flex items-center gap-1"><Calendar className="h-3 w-3 text-slate-400" /> Display Dates String</label><input type="text" value={dates} onChange={(e) => setDates(e.target.value)} placeholder="e.g. Oct 14-16" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs" /></div>
-                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 flex items-center gap-1"><Calendar className="h-3 w-3 text-emerald-500" /> Live Event Start Time</label><input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs" /></div>
-                <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 flex items-center justify-between"><span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-slate-400" /> Venue Address</span></label><input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Moscone Center, SF" className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm" /></div>
+                <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Event Name *</label><input type="text" required value={name} onChange={(e) => handleNameChange(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm font-medium text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-teal-500 focus:outline-hidden" /></div>
+                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Brand Slug</label><input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-white" /></div>
+                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Status</label><select value={status} onChange={(e) => setStatus(e.target.value as EventItem['status'])} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white"><option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option></select></div>
+                <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tagline / Theme</label><input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white" /></div>
+                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1"><Calendar className="h-3 w-3 text-slate-400" /> Display Dates String</label><input type="text" value={dates} onChange={(e) => setDates(e.target.value)} placeholder="e.g. Oct 14-16" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2 text-xs text-slate-900 dark:text-white" /></div>
+                <div className="space-y-1"><label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1"><Calendar className="h-3 w-3 text-emerald-500" /> Live Event Start Time</label><input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2 text-xs text-slate-900 dark:text-white" /></div>
+                <div className="space-y-1 sm:col-span-2"><label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between"><span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-slate-400" /> Venue Address</span></label><input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Moscone Center, SF" className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/80 px-3.5 py-2 text-sm text-slate-900 dark:text-white" /></div>
               </div>
 
-              <div className="space-y-4 p-5 rounded-xl border border-slate-200 bg-slate-50">
+              <div className="space-y-4 p-5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800">Custom Form Builder</h4>
-                    <p className="text-xs text-slate-500">Create exactly the input fields you need for your attendees.</p>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Custom Form Builder</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Create exactly the input fields you need for your attendees.</p>
                   </div>
                   <button type="button" onClick={addField} className="flex items-center gap-1 bg-teal-600 hover:bg-teal-700 transition-colors text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
                     <Plus className="w-3.5 h-3.5" /> Add Input
@@ -284,54 +284,55 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 </div>
                 <div className="space-y-3">
                   {formFields.map((field, index) => (
-                    <div key={field.id} className="flex flex-wrap sm:flex-nowrap items-end gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm">
-                      <div className="flex-1 space-y-1 min-w-[150px]"><label className="text-[10px] font-bold text-slate-500 uppercase">Column Name</label><input type="text" required value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} placeholder="e.g. Employee Code" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" /></div>
+                    <div key={field.id} className="flex flex-wrap sm:flex-nowrap items-end gap-3 p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-sm">
+                      <div className="flex-1 space-y-1 min-w-[150px]"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Column Name</label><input type="text" required value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} placeholder="e.g. Employee Code" className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-hidden" /></div>
                       <div className="w-[110px] space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Data Type</label>
-                        <select value={field.inputType || field.type || 'text'} onChange={(e) => updateField(index, 'inputType', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-teal-500 focus:outline-hidden cursor-pointer">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Data Type</label>
+                        <select value={field.inputType || field.type || 'text'} onChange={(e) => updateField(index, 'inputType', e.target.value)} className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-xs text-slate-800 dark:text-white focus:border-teal-500 focus:outline-hidden cursor-pointer">
                           <option value="text">Text</option><option value="email">Email</option><option value="tel">Phone</option><option value="number">Number</option>
                         </select>
                       </div>
-                      <div className="w-[80px] space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Length</label><input type="number" required min="1" value={field.maxLength} onChange={(e) => updateField(index, 'maxLength', Number(e.target.value))} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-hidden" /></div>
-                      <div className="flex items-center gap-3 px-3 h-[30px] border-l border-slate-200">
-                        <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={field.show} onChange={(e) => updateField(index, 'show', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" /><span className="text-[10px] font-bold text-slate-600 uppercase">Show</span></label>
-                        <label className={`flex items-center gap-1.5 ${!field.show ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" /><span className="text-[10px] font-bold text-slate-600 uppercase">Req</span></label>
+                      <div className="w-[80px] space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Length</label><input type="number" required min="1" value={field.maxLength} onChange={(e) => updateField(index, 'maxLength', Number(e.target.value))} className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-hidden" /></div>
+                      <div className="flex items-center gap-3 px-3 h-[30px] border-l border-slate-200 dark:border-slate-700">
+                        <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={field.show} onChange={(e) => updateField(index, 'show', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" /><span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">Show</span></label>
+                        <label className={`flex items-center gap-1.5 ${!field.show ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)} className="h-3.5 w-3.5 accent-teal-600 rounded" /><span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">Req</span></label>
                       </div>
-                      <button type="button" onClick={() => removeField(index)} className="h-[30px] w-[30px] flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => removeField(index)} className="h-[30px] w-[30px] flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   ))}
-                  {formFields.length === 0 && <div className="text-center py-8 text-xs text-slate-500 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50">No columns defined. Click "+ Add Input" to start building your form.</div>}
+                  {formFields.length === 0 && <div className="text-center py-8 text-xs text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-800/30">No columns defined. Click "+ Add Input" to start building your form.</div>}
                 </div>
               </div>
             </div>
           )}
 
+
           {activeTab === 'brand' && (
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
               <div className="flex-1 space-y-6">
-                <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Brand Accent Colors</h4>
+                <div className="space-y-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Brand Accent Colors</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Primary Color</label><div className="flex items-center space-x-2"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" /></div></div>
-                    <div><label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Secondary Color</label><div className="flex items-center space-x-2"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 cursor-pointer p-0.5" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase" /></div></div>
+                    <div><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase">Primary Color</label><div className="flex items-center space-x-2"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 dark:border-white/10 cursor-pointer p-0.5" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-xs font-mono uppercase" /></div></div>
+                    <div><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase">Secondary Color</label><div className="flex items-center space-x-2"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 dark:border-white/10 cursor-pointer p-0.5" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-xs font-mono uppercase" /></div></div>
                   </div>
                 </div>
 
-                <div className="space-y-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Page Background</h4>
-                  <div className="flex bg-slate-200/60 p-1 rounded-xl">
-                    <button type="button" onClick={() => setBgType('color')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'color' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Solid Color</button>
-                    <button type="button" onClick={() => setBgType('gradient')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'gradient' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Brand Gradient</button>
-                    <button type="button" onClick={() => setBgType('image')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'image' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Custom Image</button>
+                <div className="space-y-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Attendee Page Background</h4>
+                  <div className="flex bg-slate-200/60 dark:bg-slate-800 p-1 rounded-xl">
+                    <button type="button" onClick={() => setBgType('color')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'color' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>Solid Color</button>
+                    <button type="button" onClick={() => setBgType('gradient')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'gradient' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>Brand Gradient</button>
+                    <button type="button" onClick={() => setBgType('image')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bgType === 'image' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>Custom Image</button>
                   </div>
-                  {bgType === 'color' && (<div className="flex items-center gap-3 pt-2 animate-in fade-in"><input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-10 w-14 rounded-lg cursor-pointer" /><span className="text-sm font-semibold text-slate-700">Select solid background color</span></div>)}
-                  {bgType === 'gradient' && (<div className="pt-2 text-xs text-slate-500 font-medium animate-in fade-in">The page background will use a smooth gradient flowing from your Primary Color to your Secondary Color.</div>)}
-                  {bgType === 'image' && (<div className="pt-2 animate-in fade-in"><input type="file" id="bgUpload" onChange={handleBackgroundUpload} accept="image/*" className="hidden" /><label htmlFor="bgUpload" className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-slate-300 rounded-xl p-4 cursor-pointer hover:bg-slate-100 transition-colors"><Upload className="w-5 h-5 text-slate-400" /><span className="text-sm font-bold text-slate-600">{bgImageUrl ? 'Replace Background Image' : 'Upload Background Image'}</span></label></div>)}
+                  {bgType === 'color' && (<div className="flex items-center gap-3 pt-2 animate-in fade-in"><input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-10 w-14 rounded-lg cursor-pointer" /><span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Select solid background color</span></div>)}
+                  {bgType === 'gradient' && (<div className="pt-2 text-xs text-slate-500 dark:text-slate-400 font-medium animate-in fade-in">The page background will use a smooth gradient flowing from your Primary Color to your Secondary Color.</div>)}
+                  {bgType === 'image' && (<div className="pt-2 animate-in fade-in"><input type="file" id="bgUpload" onChange={handleBackgroundUpload} accept="image/*" className="hidden" /><label htmlFor="bgUpload" className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"><Upload className="w-5 h-5 text-slate-400" /><span className="text-sm font-bold text-slate-600 dark:text-slate-300">{bgImageUrl ? 'Replace Background Image' : 'Upload Background Image'}</span></label></div>)}
                 </div>
               </div>
 
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Attendee Page Preview</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Attendee Page Preview</span>
                 <div className="relative w-[300px] h-[375px] rounded-[1.5rem] shadow-xl border-4 border-slate-900 overflow-hidden flex items-center justify-center transition-all duration-300" style={{ backgroundColor: bgType === 'color' ? bgColor : undefined, backgroundImage: bgType === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : bgType === 'image' && bgImageUrl ? `url(${getMediaUrl(bgImageUrl)})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', fontFamily: fontFamily }}>
                   <div className="absolute top-4 left-4 right-4 flex justify-between items-center opacity-80"><div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm"></div><div className="w-16 h-2 rounded bg-white/30 backdrop-blur-sm"></div></div>
                   <div className="w-[85%] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-5 text-center">
@@ -349,16 +350,16 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
             <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-150">
               <div className="flex-1 space-y-6">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Primary Font Family</label><select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold"><option value="Plus Jakarta Sans">Plus Jakarta Sans</option><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Montserrat">Montserrat</option><option value="Playfair Display">Playfair Display</option></select></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Primary Font Family</label><select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-sm font-semibold"><option value="Plus Jakarta Sans">Plus Jakarta Sans</option><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Montserrat">Montserrat</option><option value="Playfair Display">Playfair Display</option></select></div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Text Alignment</label>
-                    <div className="flex bg-slate-50 border border-slate-200 rounded-xl p-1">{['left', 'center', 'right'].map((align) => (<button key={align} type="button" onClick={() => setAlignment(align as any)} className={`flex-1 py-1 text-xs font-bold capitalize rounded-lg transition-colors ${alignment === align ? 'bg-teal-600 text-white' : 'text-slate-500 hover:bg-slate-200'}`}>{align}</button>))}</div>
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Text Alignment</label>
+                    <div className="flex bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-1">{['left', 'center', 'right'].map((align) => (<button key={align} type="button" onClick={() => setAlignment(align as any)} className={`flex-1 py-1 text-xs font-bold capitalize rounded-lg transition-colors ${alignment === align ? 'bg-teal-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{align}</button>))}</div>
                   </div>
                 </div>
 
-                <div className={`space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 transition-all ${!showName ? 'opacity-70' : ''}`}>
+                <div className={`space-y-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 transition-all ${!showName ? 'opacity-70' : ''}`}>
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Name Styling</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Attendee Name Styling</h4>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input 
                         type="checkbox" 
@@ -366,26 +367,26 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                         onChange={(e) => setShowName(e.target.checked)} 
                         className="h-4 w-4 accent-teal-600 rounded" 
                       />
-                      <span className="text-xs font-bold text-slate-700">{showName ? 'Display on Frame' : 'Hidden'}</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{showName ? 'Display on Frame' : 'Hidden'}</span>
                     </label>
                   </div>
                   {showName && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({nameFontSize}px)</label><input type="range" min="40" max="150" value={nameFontSize} onChange={(e) => setNameFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
-                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({nameY})</label><input type="range" min="700" max="1300" value={nameY} onChange={(e) => setNameY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Font Size ({nameFontSize}px)</label><input type="range" min="40" max="150" value={nameFontSize} onChange={(e) => setNameFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Y-Position ({nameY})</label><input type="range" min="700" max="1300" value={nameY} onChange={(e) => setNameY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" /></div>
                       </div>
                       <div className="flex items-center gap-4 pt-2">
-                        <div className="flex items-center gap-2"><input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} disabled={nameUseGradient} className="h-8 w-10 rounded cursor-pointer disabled:opacity-50" /><span className="text-xs font-bold text-slate-700">Solid Color</span></div>
-                        <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={nameUseGradient} onChange={(e) => setNameUseGradient(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /><span className="text-xs font-bold text-slate-700">Use Brand Gradient</span></label>
+                        <div className="flex items-center gap-2"><input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} disabled={nameUseGradient} className="h-8 w-10 rounded cursor-pointer disabled:opacity-50" /><span className="text-xs font-bold text-slate-700 dark:text-slate-300">Solid Color</span></div>
+                        <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={nameUseGradient} onChange={(e) => setNameUseGradient(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /><span className="text-xs font-bold text-slate-700 dark:text-slate-300">Use Brand Gradient</span></label>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className={`space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 transition-all ${!showRoleCompany ? 'opacity-70' : ''}`}>
+                <div className={`space-y-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 transition-all ${!showRoleCompany ? 'opacity-70' : ''}`}>
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Role & Company Styling</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Role & Company Styling</h4>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input 
                         type="checkbox" 
@@ -393,42 +394,42 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                         onChange={(e) => setShowRoleCompany(e.target.checked)} 
                         className="h-4 w-4 accent-teal-600 rounded" 
                       />
-                      <span className="text-xs font-bold text-slate-700">{showRoleCompany ? 'Display on Frame' : 'Hidden'}</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{showRoleCompany ? 'Display on Frame' : 'Hidden'}</span>
                     </label>
                   </div>
                   {showRoleCompany && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({subTextFontSize}px)</label><input type="range" min="20" max="80" value={subTextFontSize} onChange={(e) => setSubTextFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
-                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({subTextY})</label><input type="range" min="700" max="1300" value={subTextY} onChange={(e) => setSubTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Font Size ({subTextFontSize}px)</label><input type="range" min="20" max="80" value={subTextFontSize} onChange={(e) => setSubTextFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Y-Position ({subTextY})</label><input type="range" min="700" max="1300" value={subTextY} onChange={(e) => setSubTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" /></div>
                       </div>
-                      <div className="flex items-center gap-2 pt-2"><input type="color" value={subTextColor} onChange={(e) => setSubTextColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer" /><span className="text-xs font-bold text-slate-700">Solid Color</span></div>
+                      <div className="flex items-center gap-2 pt-2"><input type="color" value={subTextColor} onChange={(e) => setSubTextColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer" /><span className="text-xs font-bold text-slate-700 dark:text-slate-300">Solid Color</span></div>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2 pt-2 border-t border-slate-200">
-                  <label className="text-xs font-bold text-slate-700 block">Badge Element Display</label>
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Badge Element Display</label>
                   <div className="space-y-2">
-                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Attendee Name</span></div><input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
-                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Role & Company</span></div><input type="checkbox" checked={showRoleCompany} onChange={(e) => setShowRoleCompany(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
-                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Dynamic QR Code</span></div><input type="checkbox" checked={showQrCode} onChange={(e) => setShowQrCode(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
-                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Venue & Location</span></div><input type="checkbox" checked={showVenue} onChange={(e) => setShowVenue(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
-                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Event Dates</span></div><input type="checkbox" checked={showDate} onChange={(e) => setShowDate(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"><div><span className="text-xs font-bold text-slate-800 dark:text-slate-200">Display Attendee Name</span></div><input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"><div><span className="text-xs font-bold text-slate-800 dark:text-slate-200">Display Role & Company</span></div><input type="checkbox" checked={showRoleCompany} onChange={(e) => setShowRoleCompany(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"><div><span className="text-xs font-bold text-slate-800 dark:text-slate-200">Dynamic QR Code</span></div><input type="checkbox" checked={showQrCode} onChange={(e) => setShowQrCode(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"><div><span className="text-xs font-bold text-slate-800 dark:text-slate-200">Display Venue & Location</span></div><input type="checkbox" checked={showVenue} onChange={(e) => setShowVenue(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"><div><span className="text-xs font-bold text-slate-800 dark:text-slate-200">Display Event Dates</span></div><input type="checkbox" checked={showDate} onChange={(e) => setShowDate(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
                   </div>
 
                   {/* NEW VENUE & DATE POSITIONING OPTIONS */}
                   {(showVenue || showDate) && (
-                    <div className="mt-4 space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                      <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Venue & Date Positioning</h4>
+                    <div className="mt-4 space-y-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40">
+                      <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Venue & Date Positioning</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase">X-Position ({bottomTextX})</label>
-                          <input type="range" min="0" max="1080" value={bottomTextX} onChange={(e) => setBottomTextX(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">X-Position ({bottomTextX})</label>
+                          <input type="range" min="0" max="1080" value={bottomTextX} onChange={(e) => setBottomTextX(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({bottomTextY})</label>
-                          <input type="range" min="700" max="1350" value={bottomTextY} onChange={(e) => setBottomTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Y-Position ({bottomTextY})</label>
+                          <input type="range" min="700" max="1350" value={bottomTextY} onChange={(e) => setBottomTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                         </div>
                       </div>
                     </div>
@@ -437,8 +438,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               </div>
 
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
-                <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 bg-slate-900 pointer-events-none">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Live Badge Preview</span>
+                <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 dark:border-white/20 bg-slate-900 pointer-events-none">
                   <div className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left" style={{ transform: `scale(${300 / 1080})`, background: customFrames.length > 0 ? `url(${getMediaUrl(customFrames[0].url)}) center/cover` : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, fontFamily: fontFamily }}>
                     
                     {showName && (
@@ -476,17 +477,17 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
           {activeTab === 'frames' && (
             <div className="space-y-4 animate-in fade-in duration-150">
               <div className="flex items-center justify-between mb-4">
-                <div><h3 className="text-sm font-bold text-slate-900">Custom Event Frames</h3><p className="text-xs text-slate-500">Upload branded 1080x1350 background templates.</p></div>
+                <div><h3 className="text-sm font-bold text-slate-900 dark:text-white">Custom Event Frames</h3><p className="text-xs text-slate-500 dark:text-slate-400">Upload branded 1080x1350 background templates.</p></div>
                 <input type="file" ref={fileInputRef} onChange={handleFrameUpload} accept="image/*" className="hidden" />
-                <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center space-x-1.5 rounded-lg bg-slate-900 text-white px-3 py-1.5 text-xs font-bold hover:bg-black transition-colors"><Upload className="h-3.5 w-3.5" /><span>Upload Frame</span></button>
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center space-x-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white px-3 py-1.5 text-xs font-bold hover:bg-black dark:hover:bg-slate-700 transition-colors"><Upload className="h-3.5 w-3.5" /><span>Upload Frame</span></button>
               </div>
-              {customFrames.length === 0 ? (<div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500 text-xs">No custom frames uploaded yet. Ensure you save the event first before uploading.</div>) : (
+              {customFrames.length === 0 ? (<div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 text-xs">No custom frames uploaded yet. Ensure you save the event first before uploading.</div>) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {customFrames.map((frame) => (
-                    <div key={frame._id || frame.id} className="relative group rounded-xl border border-slate-200 overflow-hidden bg-slate-100">
+                    <div key={frame._id || frame.id} className="relative group rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <img src={getMediaUrl(frame.url)} alt={frame.label} className="w-full aspect-[4/5] object-cover" />
                       <button type="button" onClick={() => handleRemoveFrame(frame._id || frame.id!)} className="absolute top-2 right-2 rounded-md bg-rose-500 p-1.5 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"><Trash2 className="h-3.5 w-3.5" /></button>
-                      <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-2 text-[10px] font-bold truncate">{frame.label}</div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 text-[10px] font-bold text-slate-900 dark:text-white truncate">{frame.label}</div>
                     </div>
                   ))}
                 </div>
@@ -494,8 +495,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
             </div>
           )}
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between mt-4">
-            <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+          <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between mt-4">
+            <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
             <button type="submit" className="flex items-center space-x-1.5 rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-teal-700 transition-all"><Save className="h-4 w-4" /><span>{isEditing ? 'Save Changes' : 'Publish'}</span></button>
           </div>
         </form>

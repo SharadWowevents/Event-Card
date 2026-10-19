@@ -73,23 +73,23 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 px-6 py-4">
           <div className="flex items-center space-x-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-sky-500 to-teal-500 text-white shadow-xs">
               <Scan className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">AI Face-Match Photo Finder</h3>
-              <p className="text-xs text-slate-500">Scan event photos with biometric accuracy</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Face-Match Photo Finder</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Scan event photos with biometric accuracy</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -102,10 +102,10 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
           {step === 'capture' && (
             <div className="space-y-5">
               <div className="text-center">
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   Select or upload your selfie to locate all stage & crowd photos:
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Our privacy-preserving model compares biometric vectors without storing your face.
                 </p>
               </div>
@@ -129,7 +129,7 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
 
               {/* Quick Portrait Selection */}
               <div>
-                <span className="block text-center text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <span className="block text-center text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
                   Pick Demo Profile Or Upload Your Own
                 </span>
                 <div className="flex justify-center items-center space-x-3 overflow-x-auto pb-1">
@@ -140,7 +140,7 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
                       className={`h-12 w-12 rounded-full border-2 overflow-hidden transition-all ${
                         selectedPhoto === url
                           ? 'border-teal-500 ring-2 ring-teal-500/20 scale-110'
-                          : 'border-slate-200 hover:border-slate-400'
+                          : 'border-slate-200 dark:border-white/10 hover:border-slate-400'
                       }`}
                     >
                       <img
@@ -165,7 +165,7 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50"
+                  className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   <span>Upload Local Selfie / Headshot</span>
@@ -224,20 +224,20 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
 
               {/* Progress bar */}
               <div className="w-full space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                  <span className="flex items-center gap-1.5 text-teal-700 font-mono">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="flex items-center gap-1.5 text-teal-700 dark:text-teal-400 font-mono">
                     <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                     <span>Vector Similarity Engine</span>
                   </span>
-                  <span className="font-mono text-teal-600 font-bold">{scanProgress}%</span>
+                  <span className="font-mono text-teal-600 dark:text-teal-400 font-bold">{scanProgress}%</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-300 rounded-full"
                     style={{ width: `${scanProgress}%` }}
                   />
                 </div>
-                <p className="text-center text-xs text-slate-500 font-mono pt-1">
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400 font-mono pt-1">
                   {scanStatusText}
                 </p>
               </div>
@@ -248,28 +248,28 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
           {/* STEP 3: RESULTS SUMMARY */}
           {step === 'results' && (
             <div className="space-y-5 text-center py-2">
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 mx-auto ring-8 ring-emerald-50/50">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mx-auto ring-8 ring-emerald-50/50 dark:ring-emerald-950/30">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
 
               <div>
-                <h4 className="text-lg font-extrabold text-slate-900">
+                <h4 className="text-lg font-extrabold text-slate-900 dark:text-white">
                   Matches Found in Event Gallery!
                 </h4>
-                <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto">
-                  We identified <strong className="text-teal-700 font-bold">7 high-resolution photos</strong> across 3 stages matching your facial biometrics.
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-sm mx-auto">
+                  We identified <strong className="text-teal-700 dark:text-teal-400 font-bold">7 high-resolution photos</strong> across 3 stages matching your facial biometrics.
                 </p>
               </div>
 
               {/* Match Stats Card */}
               <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="text-xl font-extrabold text-teal-600">98.4%</div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Confidence</div>
+                <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/80 p-3">
+                  <div className="text-xl font-extrabold text-teal-600 dark:text-teal-400">98.4%</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Confidence</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="text-xl font-extrabold text-slate-900">7 Photos</div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Detected</div>
+                <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/80 p-3">
+                  <div className="text-xl font-extrabold text-slate-900 dark:text-white">7 Photos</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Detected</div>
                 </div>
               </div>
 
@@ -285,7 +285,7 @@ export function FaceMatchModal({ isOpen, onClose, onApplyMatches }: FaceMatchMod
                 </button>
                 <button
                   onClick={() => setStep('capture')}
-                  className="text-xs font-semibold text-slate-500 hover:text-slate-800"
+                  className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
                 >
                   Scan with another photo
                 </button>

@@ -44,9 +44,7 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto space-y-6">
       {/* Header */}
-      <div className={`p-6 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-        isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-200/90'
-      }`}>
+      <div className="p-6 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/70 border-slate-200/90 dark:border-white/10 transition-colors">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-500">
@@ -55,8 +53,8 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span className="text-xs text-slate-400">Real-time Canvas Renderer</span>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Pass Templates & Design System</h1>
-          <p className="text-xs text-slate-400 mt-1">Configure digital advocacy passes, badges, holographic foils, and attendee frames.</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Pass Templates & Design System</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure digital advocacy passes, badges, holographic foils, and attendee frames.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -73,9 +71,7 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
       {/* Studio Workspace: Split Controls & Live Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Configuration Controls (7 cols) */}
-        <div className={`lg:col-span-7 p-6 rounded-2xl border space-y-6 ${
-          isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-200/90'
-        }`}>
+        <div className="lg:col-span-7 p-6 rounded-2xl border space-y-6 bg-white dark:bg-slate-900/70 border-slate-200/90 dark:border-white/10 transition-colors">
           {/* Role Tier Selector */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
@@ -94,8 +90,8 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
                   }}
                   className={`p-3 rounded-xl border text-center transition-all ${
                     selectedRole === r.id
-                      ? 'border-emerald-500 bg-emerald-500/10 shadow-sm'
-                      : 'border-inherit hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'border-emerald-500 bg-emerald-500/10 shadow-sm text-slate-900 dark:text-white'
+                      : 'border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
                   }`}
                 >
                   <div className="text-xs font-bold">{r.label}</div>
@@ -119,8 +115,8 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
                   onClick={() => setActiveTheme(t.id as any)}
                   className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
                     activeTheme === t.id
-                      ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
-                      : 'border-inherit hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm text-slate-900 dark:text-white'
+                      : 'border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
                   }`}
                 >
                   <div className={`h-8 w-8 rounded-lg bg-gradient-to-tr ${t.gradient} shrink-0 border ${t.border}`} />
@@ -139,33 +135,29 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
               Pass Typography & Headlines
             </label>
             <div>
-              <span className="text-[11px] text-slate-500 block mb-1">Pass Header Badge</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Pass Header Badge</span>
               <input
                 type="text"
                 value={headlineText}
                 onChange={(e) => setHeadlineText(e.target.value)}
-                className={`w-full h-9 px-3 rounded-xl text-xs border outline-none font-semibold ${
-                  isDark ? 'bg-slate-800/80 border-white/10 text-white focus:border-emerald-500' : 'bg-slate-50 border-slate-200 focus:border-emerald-500'
-                }`}
+                className="w-full h-9 px-3 rounded-xl text-xs border outline-none font-semibold bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-emerald-500 transition-colors"
               />
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 block mb-1">Event Subtitle / Edition</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Event Subtitle / Edition</span>
               <input
                 type="text"
                 value={subText}
                 onChange={(e) => setSubText(e.target.value)}
-                className={`w-full h-9 px-3 rounded-xl text-xs border outline-none ${
-                  isDark ? 'bg-slate-800/80 border-white/10 text-white focus:border-emerald-500' : 'bg-slate-50 border-slate-200 focus:border-emerald-500'
-                }`}
+                className="w-full h-9 px-3 rounded-xl text-xs border outline-none bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-emerald-500 transition-colors"
               />
             </div>
           </div>
 
           {/* Toggles */}
-          <div className="pt-2 border-t border-inherit/40 space-y-2">
+          <div className="pt-2 border-t border-slate-200 dark:border-white/10 space-y-2">
             <label className="flex items-center justify-between text-xs cursor-pointer p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50">
-              <span className="font-semibold">Display Dynamic Verification QR Code</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-200">Display Dynamic Verification QR Code</span>
               <input
                 type="checkbox"
                 checked={showQr}
@@ -177,12 +169,10 @@ export function BadgeStudioPasses({ event, onLaunchStudio, isDark }: BadgeStudio
         </div>
 
         {/* Right: Live Realistic Badge Canvas Preview (5 cols) */}
-        <div className={`lg:col-span-5 p-6 rounded-2xl border flex flex-col items-center justify-center ${
-          isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-200/90'
-        }`}>
+        <div className="lg:col-span-5 p-6 rounded-2xl border flex flex-col items-center justify-center bg-white dark:bg-slate-900/70 border-slate-200/90 dark:border-white/10 transition-colors">
           <div className="text-center mb-4">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Live Card Output</span>
-            <h3 className="font-bold text-sm">3D High-Fidelity Holographic Pass</h3>
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white">3D High-Fidelity Holographic Pass</h3>
           </div>
 
           {/* Badge Container */}

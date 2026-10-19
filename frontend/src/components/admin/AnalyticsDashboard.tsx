@@ -347,7 +347,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
                 {event.name} ({leads.length} {leads.length === 1 ? 'Pass' : 'Passes'} Registered)
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Attendee Pass & Advocacy Analytics
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
@@ -545,7 +545,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
         }`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
-              <h3 className="font-bold text-base">Pass Claim & Download Trajectory</h3>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">Pass Claim & Download Trajectory</h3>
               <p className="text-xs text-slate-400">Cumulative attendee passes claimed and badge downloads across event timeline</p>
             </div>
             <div className="flex items-center gap-4 text-xs font-semibold">
@@ -650,7 +650,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
           isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-200/90'
         }`}>
           <div>
-            <h3 className="font-bold text-base">Channel Distribution</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">Channel Distribution</h3>
             <p className="text-xs text-slate-400">Actual attendee sharing across platforms</p>
           </div>
 
@@ -692,7 +692,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
       }`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h3 className="font-bold text-base flex items-center gap-2">
+            <h3 className="font-bold text-base flex items-center gap-2 text-slate-900 dark:text-white">
               <Compass className="h-4 w-4 text-sky-500" />
               <span>Attendee Advocacy Conversion Funnel</span>
             </h3>
@@ -775,7 +775,7 @@ export function AnalyticsDashboard({ event, isDark }: AnalyticsDashboardProps) {
       }`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h3 className="font-bold text-base">Verified Advocate & Lead Stream</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">Verified Advocate & Lead Stream</h3>
             <p className="text-xs text-slate-400">Real-time attendee pass generations with multi-touch attribution</p>
           </div>
 

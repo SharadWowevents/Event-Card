@@ -316,7 +316,7 @@ export function BackupRestoreView({ isDark }: BackupRestoreViewProps) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                   Backup & Disaster Recovery
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-500/10 text-teal-500 border border-teal-500/20 flex items-center gap-1">

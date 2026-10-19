@@ -46,10 +46,10 @@ export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareMod
 
   return (
     <div className="flex flex-col space-y-4">
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 shadow-xl p-3 sm:p-4 flex flex-col items-center">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-xl p-3 sm:p-4 flex flex-col items-center">
         
         {/* Header Bar */}
-        <div className="w-full flex items-center justify-between pb-3 text-xs text-slate-300">
+        <div className="w-full flex items-center justify-between pb-3 text-xs text-slate-400">
           <div className="flex items-center space-x-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">1080 × 1350 PX (HD)</span>
@@ -63,7 +63,7 @@ export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareMod
       </div>
 
       {/* Action Buttons */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+      <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
         <div className="flex gap-2.5">
           <button 
             id="download-badge-btn"
@@ -75,7 +75,7 @@ export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareMod
           </button>
           <button 
             onClick={onOpenShareModal} 
-            className="flex items-center justify-center space-x-2 rounded-xl bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 px-4 py-3 text-sm font-bold transition-colors"
+            className="flex items-center justify-center space-x-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-3 text-sm font-bold transition-colors"
           >
             <Share2 className="h-4 w-4" /><span>Share</span>
           </button>

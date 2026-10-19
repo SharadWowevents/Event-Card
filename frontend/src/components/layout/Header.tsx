@@ -212,11 +212,7 @@ export function Header({
   };
 
   return (
-    <header className={`sticky top-0 z-30 h-16 w-full border-b backdrop-blur-xl transition-colors ${
-      isDark
-        ? 'bg-[#0b0f19]/85 border-white/10 text-white'
-        : 'bg-white/85 border-slate-200/90 text-slate-900'
-    }`}>
+    <header className="sticky top-0 z-30 h-16 w-full border-b backdrop-blur-xl transition-colors bg-white/85 dark:bg-[#0b0f19]/85 border-slate-200/90 dark:border-white/10 text-slate-900 dark:text-white">
       <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4">
         {/* Left: Mobile Toggle & Breadcrumb */}
         <div className="flex items-center gap-3 min-w-0">
@@ -269,11 +265,7 @@ export function Header({
                 setIsSearchOpen(true);
               }}
               placeholder="Search campaigns, attendees, actions..."
-              className={`w-full h-9 pl-9 pr-14 rounded-xl text-xs transition-all border outline-none ${
-                isDark
-                  ? 'bg-slate-900/60 border-white/10 text-slate-200 placeholder-slate-500 focus:border-emerald-500/60 focus:bg-slate-900'
-                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-500/60 focus:bg-white'
-              }`}
+              className="w-full h-9 pl-9 pr-14 rounded-xl text-xs transition-all border outline-none bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/60 focus:bg-white dark:focus:bg-slate-900"
             />
             {searchQuery ? (
               <button
@@ -293,9 +285,7 @@ export function Header({
 
             {/* Search Results Dropdown */}
             {isSearchOpen && (
-              <div className={`absolute left-0 right-0 mt-2 rounded-2xl shadow-2xl border p-2 z-50 max-h-[460px] overflow-y-auto animate-in fade-in slide-in-from-top-2 ${
-                isDark ? 'bg-slate-900 border-white/15 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
-              }`}>
+              <div className="absolute left-0 right-0 mt-2 rounded-2xl shadow-2xl border p-2 z-50 max-h-[460px] overflow-y-auto animate-in fade-in slide-in-from-top-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/15 text-slate-800 dark:text-slate-200">
                 {cleanQ && hasAnyResults && (
                   <div className="p-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Search Results
@@ -415,11 +405,7 @@ export function Header({
           <div ref={notifContainerRef} className="relative">
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className={`relative p-2 rounded-xl border transition-colors ${
-                isDark
-                  ? 'bg-slate-900/60 border-white/10 text-slate-300 hover:bg-slate-800'
-                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
+              className="relative p-2 rounded-xl border transition-colors bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               title="Notifications"
             >
               <Bell className="h-4 w-4" />
@@ -429,9 +415,7 @@ export function Header({
             </button>
 
             {notificationsOpen && (
-              <div className={`absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl shadow-2xl border p-3 z-50 animate-in fade-in slide-in-from-top-2 ${
-                isDark ? 'bg-slate-900 border-white/15 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
-              }`}>
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl shadow-2xl border p-3 z-50 animate-in fade-in slide-in-from-top-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/15 text-slate-800 dark:text-slate-200">
                 <div className="flex items-center justify-between pb-2 border-b border-inherit mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Notifications</span>
