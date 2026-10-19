@@ -86,7 +86,7 @@ export function Sidebar({
       id: 'admin-analytics',
       label: 'Pass & Advocacy Analytics',
       icon: TrendingUp,
-      badge: '+34%',
+      badge: '',
       description: 'Attendee passes & downloads'
     }
   ];
