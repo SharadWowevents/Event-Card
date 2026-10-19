@@ -13,7 +13,8 @@ import { CreateEditEventModal } from './components/admin/CreateEditEventModal';
 import { SmartEventGallery } from './components/gallery/SmartEventGallery';
 import { Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 
-const API_BASE = `${process.env.REACT_APP_API_BASE_URL}`;
+const API_BASE = `${import.meta.env.VITE_BACKEND_URL}`;
+console.log('API_BASE:', API_BASE);
 const DEFAULT_ATTENDEE_BADGE: AttendeeBadgeData = {
   name: '', email: '', mobile: '', title: '', company: '', 
   role: '' as any,

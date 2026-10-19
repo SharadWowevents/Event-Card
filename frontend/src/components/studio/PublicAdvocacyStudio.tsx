@@ -107,7 +107,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
   const saveLeadToBackend = async (dataUrl: string, frameUrl?: string, themeId?: string) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/badges`, {
+      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/badges`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,7 +131,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
         if (canvasRef.current) {
           try {
             const finalBadgeUrl = canvasRef.current.toDataURL('image/jpeg', 0.9);
-            fetch(`${process.env.REACT_APP_API_BASE_URL}/badges/${badge.leadId}/composite`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalBadgeUrl }) });
+            fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/badges/${badge.leadId}/composite`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalBadgeUrl }) });
           } catch (err) { console.error("Failed to capture composite canvas", err); }
         }
       }, 1500);
