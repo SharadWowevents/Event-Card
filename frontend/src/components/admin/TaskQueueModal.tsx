@@ -64,7 +64,7 @@ export function TaskQueueModal({ isOpen, onClose, isDark }: TaskQueueModalProps)
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch('/api/tasks/stats');
+      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/stats`);
       if (res.ok) {
         const data = await res.json();
         setStats(data);
@@ -78,8 +78,8 @@ export function TaskQueueModal({ isOpen, onClose, isDark }: TaskQueueModalProps)
     try {
       setIsLoading(true);
       const url = statusFilter === 'all' 
-        ? '/api/tasks?limit=30' 
-        : `/api/tasks?status=${statusFilter}&limit=30`;
+        ? '/tasks?limit=30' 
+        : `/tasks?status=${statusFilter}&limit=30`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -113,7 +113,7 @@ export function TaskQueueModal({ isOpen, onClose, isDark }: TaskQueueModalProps)
 
   const handleRetry = async (taskId: string) => {
     try {
-      const res = await fetch(`/api/tasks/${taskId}/retry`, { method: 'POST' });
+      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/${taskId}/retry`, { method: 'POST' });
       if (res.ok) {
         showFeedback(`Task #${taskId.slice(-6)} re-queued for execution!`);
         fetchTasks();
@@ -126,7 +126,7 @@ export function TaskQueueModal({ isOpen, onClose, isDark }: TaskQueueModalProps)
 
   const handleSweepRecovery = async () => {
     try {
-      const res = await fetch('/api/tasks/recover', { method: 'POST' });
+      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/recover`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         showFeedback(data.message || 'Recovery sweep completed');
@@ -140,7 +140,7 @@ export function TaskQueueModal({ isOpen, onClose, isDark }: TaskQueueModalProps)
 
   const handleEnqueueSample = async () => {
     try {
-      const res = await fetch('/api/tasks/enqueue', {
+      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/enqueue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -161,7 +161,7 @@ export function TaskQueueModal({ isOpen, onClose, isDark }: TaskQueueModalProps)
 
   const handleClearCompleted = async () => {
     try {
-      const res = await fetch('/api/tasks/clear-completed', { method: 'POST' });
+      const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/tasks/clear-completed`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         showFeedback(`Cleaned up ${data.deletedCount} completed tasks`);
