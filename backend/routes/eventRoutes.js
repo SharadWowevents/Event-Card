@@ -3,6 +3,7 @@ const router = express.Router();
 const Event = require('../models/Event');
 const Lead = require('../models/Lead');
 const Moment = require('../models/Moment');
+const taskQueue = require('../services/taskQueue');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -149,6 +150,27 @@ router.get('/:id/leads', async (req, res) => {
 
     const leads = await Lead.find(query).sort({ createdAt: -1 });
     res.json(leads);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Enqueue asynchronous background export task
+router.post('/:id/export-task', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const task = await taskQueue.enqueue('EXPORT_EVENT_DATA', {
+      eventId: req.params.id,
+      format: req.query.format || 'csv'
+    }, { priority: 1 });
+
+    res.status(202).json({
+      success: true,
+      message: 'Export background task enqueued. Zero loss on crash guaranteed.',
+      taskId: task._id
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

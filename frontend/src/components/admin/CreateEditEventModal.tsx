@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, Sparkles, Palette, Sliders, Info, Calendar, MapPin, Image as ImageIcon, Upload, Trash2, Plus } from 'lucide-react';
 import { EventItem } from '../../types';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 interface CreateEditEventModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
   const [showQrCode, setShowQrCode] = useState(true);
   const [showVenue, setShowVenue] = useState(true);
   const [showDate, setShowDate] = useState(true);
+  const [showName, setShowName] = useState(true);
+  const [showRoleCompany, setShowRoleCompany] = useState(true);
 
   const [nameFontSize, setNameFontSize] = useState(80);
   const [nameColor, setNameColor] = useState('#ffffff');
@@ -69,6 +72,8 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
       setShowQrCode(eventToEdit?.templateConfig?.textPositioning?.showQrCode ?? true);
       setShowVenue(eventToEdit?.templateConfig?.textPositioning?.showVenue ?? true);
       setShowDate(eventToEdit?.templateConfig?.textPositioning?.showDate ?? true);
+      setShowName(eventToEdit?.templateConfig?.textPositioning?.showName ?? true);
+      setShowRoleCompany(eventToEdit?.templateConfig?.textPositioning?.showRoleCompany ?? true);
 
       setNameFontSize(eventToEdit?.templateConfig?.textPositioning?.nameFontSize ?? 80);
       setNameColor(eventToEdit?.templateConfig?.textPositioning?.nameColor || '#ffffff');
@@ -215,6 +220,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
         attendeeHeadline: '', speakerHeadline: '', exhibitorHeadline: '', sponsorHeadline: '', overlayStyle: 'card',
         textPositioning: { 
           textColor: '#ffffff', alignment, showQrCode, showVenue, showDate, 
+          showName, showRoleCompany,
           nameFontSize, nameColor, nameUseGradient, nameY, 
           subTextFontSize, subTextColor, subTextY,
           bottomTextX, bottomTextY // SAVING NEW VARIABLES
@@ -326,7 +332,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
 
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Attendee Page Preview</span>
-                <div className="relative w-[300px] h-[375px] rounded-[1.5rem] shadow-xl border-4 border-slate-900 overflow-hidden flex items-center justify-center transition-all duration-300" style={{ backgroundColor: bgType === 'color' ? bgColor : undefined, backgroundImage: bgType === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : bgType === 'image' && bgImageUrl ? `url(${bgImageUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', fontFamily: fontFamily }}>
+                <div className="relative w-[300px] h-[375px] rounded-[1.5rem] shadow-xl border-4 border-slate-900 overflow-hidden flex items-center justify-center transition-all duration-300" style={{ backgroundColor: bgType === 'color' ? bgColor : undefined, backgroundImage: bgType === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : bgType === 'image' && bgImageUrl ? `url(${getMediaUrl(bgImageUrl)})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', fontFamily: fontFamily }}>
                   <div className="absolute top-4 left-4 right-4 flex justify-between items-center opacity-80"><div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm"></div><div className="w-16 h-2 rounded bg-white/30 backdrop-blur-sm"></div></div>
                   <div className="w-[85%] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-5 text-center">
                     <div className="w-12 h-12 rounded-xl mx-auto mb-3" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}></div>
@@ -350,30 +356,62 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                   </div>
                 </div>
 
-                <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Name Styling</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({nameFontSize}px)</label><input type="range" min="40" max="150" value={nameFontSize} onChange={(e) => setNameFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
-                    <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({nameY})</label><input type="range" min="700" max="1300" value={nameY} onChange={(e) => setNameY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                <div className={`space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 transition-all ${!showName ? 'opacity-70' : ''}`}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Attendee Name Styling</h4>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={showName} 
+                        onChange={(e) => setShowName(e.target.checked)} 
+                        className="h-4 w-4 accent-teal-600 rounded" 
+                      />
+                      <span className="text-xs font-bold text-slate-700">{showName ? 'Display on Frame' : 'Hidden'}</span>
+                    </label>
                   </div>
-                  <div className="flex items-center gap-4 pt-2">
-                    <div className="flex items-center gap-2"><input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} disabled={nameUseGradient} className="h-8 w-10 rounded cursor-pointer disabled:opacity-50" /><span className="text-xs font-bold text-slate-700">Solid Color</span></div>
-                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={nameUseGradient} onChange={(e) => setNameUseGradient(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /><span className="text-xs font-bold text-slate-700">Use Brand Gradient</span></label>
-                  </div>
+                  {showName && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({nameFontSize}px)</label><input type="range" min="40" max="150" value={nameFontSize} onChange={(e) => setNameFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({nameY})</label><input type="range" min="700" max="1300" value={nameY} onChange={(e) => setNameY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                      </div>
+                      <div className="flex items-center gap-4 pt-2">
+                        <div className="flex items-center gap-2"><input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} disabled={nameUseGradient} className="h-8 w-10 rounded cursor-pointer disabled:opacity-50" /><span className="text-xs font-bold text-slate-700">Solid Color</span></div>
+                        <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={nameUseGradient} onChange={(e) => setNameUseGradient(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /><span className="text-xs font-bold text-slate-700">Use Brand Gradient</span></label>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Role & Company Styling</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({subTextFontSize}px)</label><input type="range" min="20" max="80" value={subTextFontSize} onChange={(e) => setSubTextFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
-                    <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({subTextY})</label><input type="range" min="700" max="1300" value={subTextY} onChange={(e) => setSubTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                <div className={`space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 transition-all ${!showRoleCompany ? 'opacity-70' : ''}`}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Role & Company Styling</h4>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={showRoleCompany} 
+                        onChange={(e) => setShowRoleCompany(e.target.checked)} 
+                        className="h-4 w-4 accent-teal-600 rounded" 
+                      />
+                      <span className="text-xs font-bold text-slate-700">{showRoleCompany ? 'Display on Frame' : 'Hidden'}</span>
+                    </label>
                   </div>
-                  <div className="flex items-center gap-2 pt-2"><input type="color" value={subTextColor} onChange={(e) => setSubTextColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer" /><span className="text-xs font-bold text-slate-700">Solid Color</span></div>
+                  {showRoleCompany && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Font Size ({subTextFontSize}px)</label><input type="range" min="20" max="80" value={subTextFontSize} onChange={(e) => setSubTextFontSize(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">Y-Position ({subTextY})</label><input type="range" min="700" max="1300" value={subTextY} onChange={(e) => setSubTextY(Number(e.target.value))} className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" /></div>
+                      </div>
+                      <div className="flex items-center gap-2 pt-2"><input type="color" value={subTextColor} onChange={(e) => setSubTextColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer" /><span className="text-xs font-bold text-slate-700">Solid Color</span></div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-slate-200">
                   <label className="text-xs font-bold text-slate-700 block">Badge Element Display</label>
                   <div className="space-y-2">
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Attendee Name</span></div><input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Role & Company</span></div><input type="checkbox" checked={showRoleCompany} onChange={(e) => setShowRoleCompany(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
                     <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Dynamic QR Code</span></div><input type="checkbox" checked={showQrCode} onChange={(e) => setShowQrCode(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
                     <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Venue & Location</span></div><input type="checkbox" checked={showVenue} onChange={(e) => setShowVenue(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
                     <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50"><div><span className="text-xs font-bold text-slate-800">Display Event Dates</span></div><input type="checkbox" checked={showDate} onChange={(e) => setShowDate(e.target.checked)} className="h-4 w-4 accent-teal-600 rounded" /></label>
@@ -401,10 +439,14 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               <div className="w-[300px] shrink-0 mx-auto md:mx-0 flex flex-col gap-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Live Badge Preview</span>
                 <div className="relative w-[300px] h-[375px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-slate-300 bg-slate-900 pointer-events-none">
-                  <div className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left" style={{ transform: `scale(${300 / 1080})`, background: customFrames.length > 0 ? `url(${customFrames[0].url}) center/cover` : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, fontFamily: fontFamily }}>
+                  <div className="absolute top-0 left-0 w-[1080px] h-[1350px] origin-top-left" style={{ transform: `scale(${300 / 1080})`, background: customFrames.length > 0 ? `url(${getMediaUrl(customFrames[0].url)}) center/cover` : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, fontFamily: fontFamily }}>
                     
-                    <div className="absolute w-full px-20" style={{ top: `${nameY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: nameUseGradient ? 'transparent' : nameColor, backgroundImage: nameUseGradient ? `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` : 'none', WebkitBackgroundClip: nameUseGradient ? 'text' : 'border-box', lineHeight: 1 }}>Dynamic Field 1</div>
-                    <div className="absolute w-full px-20" style={{ top: `${subTextY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${subTextFontSize}px`, fontWeight: '600', color: subTextColor, lineHeight: 1 }}>Dynamic Field 2</div>
+                    {showName && (
+                      <div className="absolute w-full px-20" style={{ top: `${nameY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${nameFontSize}px`, fontWeight: 'bold', color: nameUseGradient ? 'transparent' : nameColor, backgroundImage: nameUseGradient ? `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` : 'none', WebkitBackgroundClip: nameUseGradient ? 'text' : 'border-box', lineHeight: 1 }}>Dynamic Field 1</div>
+                    )}
+                    {showRoleCompany && (
+                      <div className="absolute w-full px-20" style={{ top: `${subTextY}px`, transform: 'translateY(-80%)', textAlign: alignment, fontSize: `${subTextFontSize}px`, fontWeight: '600', color: subTextColor, lineHeight: 1 }}>Dynamic Field 2</div>
+                    )}
                     
                     {/* LIVE PREVIEW FOR ADJUSTABLE VENUE/DATE */}
                     {(showVenue || showDate) && (
@@ -442,7 +484,7 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {customFrames.map((frame) => (
                     <div key={frame._id || frame.id} className="relative group rounded-xl border border-slate-200 overflow-hidden bg-slate-100">
-                      <img src={frame.url} alt={frame.label} className="w-full aspect-[4/5] object-cover" />
+                      <img src={getMediaUrl(frame.url)} alt={frame.label} className="w-full aspect-[4/5] object-cover" />
                       <button type="button" onClick={() => handleRemoveFrame(frame._id || frame.id!)} className="absolute top-2 right-2 rounded-md bg-rose-500 p-1.5 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"><Trash2 className="h-3.5 w-3.5" /></button>
                       <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-2 text-[10px] font-bold truncate">{frame.label}</div>
                     </div>

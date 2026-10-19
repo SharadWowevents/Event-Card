@@ -49,7 +49,7 @@ export function TeamManagement() {
     const token = localStorage.getItem('token');
     if (!token) return forceLogout();
 
-    fetch(`/api/team`, {
+    fetch(`http://localhost:5011/api/team`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(async (res) => {
@@ -75,7 +75,7 @@ export function TeamManagement() {
   const handleRemoveMember = async (memberId: string) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`/api/team/${memberId}`, {
+      const res = await fetch(`http://localhost:5011/api/team/${memberId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -97,7 +97,7 @@ export function TeamManagement() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`/api/team/invite`, {
+      const res = await fetch(`http://localhost:5011/api/team/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: inviteName, email: inviteEmail, role: inviteRole })
@@ -122,7 +122,7 @@ export function TeamManagement() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`/api/team/${selectedMember._id}/password`, {
+      const res = await fetch(`http://localhost:5011/api/team/${selectedMember._id}/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ newPassword })

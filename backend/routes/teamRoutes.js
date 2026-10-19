@@ -37,11 +37,69 @@ router.post('/login', async (req, res) => {
     user.lastActive = Date.now();
     await user.save();
 
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role, name: user.name, email: user.email }, 
+      JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
 
     res.json({
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role,
+        themePreference: user.themePreference || 'dark'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get Current Authenticated User Profile
+router.get('/me', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ 
+      id: user._id, 
+      name: user.name, 
+      email: user.email, 
+      role: user.role,
+      themePreference: user.themePreference || 'dark'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Current User Theme Preference (Protected)
+router.patch('/theme', protect, async (req, res) => {
+  try {
+    const { themePreference } = req.body;
+    if (!['dark', 'light'].includes(themePreference)) {
+      return res.status(400).json({ error: "themePreference must be 'dark' or 'light'" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { themePreference },
+      { returnDocument: 'after' }
+    ).select('-password');
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        themePreference: user.themePreference
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

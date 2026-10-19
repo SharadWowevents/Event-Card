@@ -5,6 +5,7 @@ import {
   User, Mail, Phone, Hash, Building, Briefcase, MessageSquare
 } from 'lucide-react';
 import { AttendeeBadgeData, EventItem } from '../../types';
+import { getMediaUrl } from '../../utils/mediaUtils';
 import { BadgeCanvasPreview } from './BadgeCanvasPreview';
 import { SocialShareModal } from './SocialShareModal';
 
@@ -106,7 +107,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
 
   const saveLeadToBackend = async (dataUrl: string, frameUrl?: string, themeId?: string) => {
     try {
-      const res = await fetch(`/api/badges`, {
+      const res = await fetch(`http://localhost:5011/api/badges`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -130,7 +131,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
         if (canvasRef.current) {
           try {
             const finalBadgeUrl = canvasRef.current.toDataURL('image/jpeg', 0.9);
-            fetch(`/api/badges/${badge.leadId}/composite`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalBadgeUrl }) });
+            fetch(`http://localhost:5011/api/badges/${badge.leadId}/composite`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalBadgeUrl }) });
           } catch (err) { console.error("Failed to capture composite canvas", err); }
         }
       }, 1500);
@@ -148,7 +149,8 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     if (badge.customFrameUrl) {
       try {
         const img = new Image();
-        img.src = badge.customFrameUrl;
+        img.crossOrigin = 'anonymous';
+        img.src = getMediaUrl(badge.customFrameUrl);
         await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
         if (img.naturalWidth && img.naturalHeight) { targetWidth = img.naturalWidth; targetHeight = img.naturalHeight; }
       } catch (e) { console.error("Could not read frame dimensions", e); }
@@ -196,7 +198,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     const { backgroundType, backgroundColor, backgroundImageUrl, primaryColor, secondaryColor, fontFamily } = event.theme;
     let style: React.CSSProperties = { fontFamily: fontFamily || 'Plus Jakarta Sans', minHeight: 'calc(100vh - 4rem)' };
     if (backgroundType === 'color') style.backgroundColor = backgroundColor || '#0f172a';
-    else if (backgroundType === 'image' && backgroundImageUrl) { style.backgroundImage = `url(${backgroundImageUrl})`; style.backgroundSize = 'cover'; style.backgroundPosition = 'center'; style.backgroundAttachment = 'fixed'; } 
+    else if (backgroundType === 'image' && backgroundImageUrl) { style.backgroundImage = `url(${getMediaUrl(backgroundImageUrl)})`; style.backgroundSize = 'cover'; style.backgroundPosition = 'center'; style.backgroundAttachment = 'fixed'; } 
     else style.backgroundImage = `linear-gradient(135deg, ${primaryColor || '#0ea5e9'}, ${secondaryColor || '#10b981'})`;
     return style;
   };
@@ -294,7 +296,7 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
                 <div className="absolute inset-0 z-0">
                   {isCameraLoading ? (<div className="h-full text-white flex flex-col items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mb-2" /><span className="text-[10px] font-bold">Starting...</span></div>) : cameraError ? (<div className="h-full text-white flex flex-col items-center justify-center px-4 text-center"><AlertCircle className="h-6 w-6 mx-auto mb-1 text-rose-400" /><p className="text-xs font-semibold">Error</p></div>) : (<video autoPlay playsInline muted ref={setVideoNode} className="w-full h-full object-cover transform -scale-x-100" />)}
                 </div>
-                {badge.customFrameUrl ? (<img src={badge.customFrameUrl} alt="Custom Frame Overlay" className="relative z-20 w-full h-auto pointer-events-none drop-shadow-xl block" />) : (<div className="relative z-20 w-full aspect-[4/5] pointer-events-none opacity-50" style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` }} />)}
+                {badge.customFrameUrl ? (<img src={getMediaUrl(badge.customFrameUrl)} alt="Custom Frame Overlay" className="relative z-20 w-full h-auto pointer-events-none drop-shadow-xl block" />) : (<div className="relative z-20 w-full aspect-[4/5] pointer-events-none opacity-50" style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` }} />)}
               </div>
               {hasCustomFrames && (
                 <div className="pt-2">

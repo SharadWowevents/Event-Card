@@ -24,13 +24,17 @@ export interface TextPositioning {
   showVenue: boolean;
   showDate: boolean;
   
-  // NEW TYPOGRAPHY FIELDS
+  // NEW TYPOGRAPHY & VISIBILITY FIELDS
+  showName?: boolean;
+  showRoleCompany?: boolean;
   nameFontSize?: number;
   nameColor?: string;
   nameUseGradient?: boolean;
   subTextFontSize?: number;
   subTextColor?: string;
   subTextY?: number;
+  bottomTextX?: number;
+  bottomTextY?: number;
 }
 
 export interface EventTemplateConfig {

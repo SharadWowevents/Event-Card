@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Lead = require('../models/Lead');
 const Event = require('../models/Event');
+const taskQueue = require('../services/taskQueue');
 
 // CPM Benchmark ($28.50 per 1k impressions, ~115 impressions/share)
 const CPM_BENCHMARK = 28.50;
@@ -38,6 +39,13 @@ router.post('/', async (req, res) => {
 
     event.postersCount += 1;
     await event.save();
+
+    // 3. Asynchronously enqueue background composite and analytics processing
+    taskQueue.enqueue('PROCESS_BADGE_COMPOSITE', {
+      leadId: lead._id,
+      eventId: event._id,
+      attendeeName: lead.name
+    }).catch(err => console.error('[TaskQueue] Auto-enqueue badge task failed:', err));
 
     res.status(201).json({ success: true, lead });
   } catch (err) {

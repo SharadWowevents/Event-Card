@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema(
       enum: ['Active', 'Invited'],
       default: 'Invited'
     },
+    themePreference: {
+      type: String,
+      enum: ['dark', 'light'],
+      default: 'dark'
+    },
     lastActive: { type: Date, default: Date.now }
   },
   { timestamps: true }

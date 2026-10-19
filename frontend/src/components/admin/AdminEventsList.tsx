@@ -1,21 +1,9 @@
 import { useState } from 'react';
 import { 
-  Plus, 
-  Search, 
-  Layers, 
-  Archive, 
-  RotateCcw, 
-  ExternalLink, 
-  Edit3, 
-  Calendar, 
-  MapPin, 
-  Sparkles, 
-  Share2, 
-  Users, 
-  DollarSign, 
-  CheckCircle2,
-  Link,   // Added for the copy button
-  Check   // Added for the copy success state
+  Plus, Search, Calendar, MapPin, Sparkles, Share2, Users, 
+  Check, Link as LinkIcon, ExternalLink, Edit3, 
+  Archive, RotateCcw, Image, TrendingUp, Ticket, Flame,
+  Download, Filter, ArrowUpRight, CheckCircle2
 } from 'lucide-react';
 import { EventItem, EventStatus } from '../../types';
 
@@ -27,6 +15,7 @@ interface AdminEventsListProps {
   onToggleArchive: (eventId: string) => void;
   onLaunchStudio: (event: EventItem) => void;
   onLaunchGallery: (event: EventItem) => void;
+  isDark?: boolean;
 }
 
 export function AdminEventsList({
@@ -36,285 +25,417 @@ export function AdminEventsList({
   onEditEvent,
   onToggleArchive,
   onLaunchStudio,
-  onLaunchGallery
+  onLaunchGallery,
+  isDark
 }: AdminEventsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | EventStatus>('all');
-  
-  // NEW: State to track which link was just copied
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
   // Stats calculation
-  const totalAdvocates = events.reduce((acc, e) => acc + e.postersCount, 0);
-  const totalShares = events.reduce((acc, e) => acc + e.sharesCount, 0);
-  const totalEMV = events.reduce((acc, e) => acc + e.emvValue, 0);
+  const totalPosters = events.reduce((acc, e) => acc + (e.postersCount || 0), 0);
+  const totalShares = events.reduce((acc, e) => acc + (e.sharesCount || 0), 0);
   const activeEventsCount = events.filter((e) => e.status === 'active').length;
+  const draftEventsCount = events.filter((e) => e.status === 'draft').length;
+  const archivedEventsCount = events.filter((e) => e.status === 'archived').length;
 
   const filteredEvents = events.filter((e) => {
     if (statusFilter !== 'all' && e.status !== statusFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      return e.name.toLowerCase().includes(q) || e.venue.toLowerCase().includes(q) || e.slug.toLowerCase().includes(q);
+      return (
+        e.name.toLowerCase().includes(q) ||
+        (e.venue && e.venue.toLowerCase().includes(q)) ||
+        e.slug.toLowerCase().includes(q)
+      );
     }
     return true;
   });
 
-  // NEW: Function to generate and copy the link
   const handleCopyLink = (slug: string) => {
     const url = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(url);
     setCopiedSlug(slug);
-    setTimeout(() => setCopiedSlug(null), 2000); // Reset after 2 seconds
+    setTimeout(() => setCopiedSlug(null), 2000);
+  };
+
+  const handleExportSummaryCsv = () => {
+    const headers = ['Event Name', 'Slug', 'Status', 'Dates', 'Venue', 'Posters Claimed', 'Social Shares'];
+    const rows = events.map(e => [
+      `"${e.name.replace(/"/g, '""')}"`,
+      e.slug,
+      e.status,
+      `"${e.dates}"`,
+      `"${e.venue}"`,
+      e.postersCount || 0,
+      e.sharesCount || 0
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csvContent));
+    link.setAttribute('download', `events-campaign-summary-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20">
-      
-      {/* Top Header */}
-      <div className="border-b border-slate-200/80 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center space-x-2 rounded-full bg-indigo-50 border border-indigo-200/60 px-3 py-1 text-xs font-semibold text-indigo-800 mb-2">
-                <Layers className="h-3.5 w-3.5 text-indigo-600" />
-                <span>Organizer Command Center</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-                Event Advocacy Campaigns
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-slate-500">
-                Deploy dynamic badge generators, monitor advocate sharing loops, and calculate earned media value.
-              </p>
-            </div>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto space-y-6">
+      {/* Top Page Header: Advocacy Lifecycle Controller */}
+      <div className={`p-6 sm:p-8 rounded-2xl border relative overflow-hidden transition-all ${
+        isDark
+          ? 'bg-gradient-to-br from-slate-900/90 via-[#0e1626] to-[#0c1322] border-white/10 shadow-xl'
+          : 'bg-white border-slate-300 shadow-sm'
+      }`}>
+        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-80 h-80 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
 
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Advocacy Lifecycle Controller</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Campaign Management & Live Summits
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              Orchestrate attendee advocacy loops, custom digital passes, and viral reach metrics with automated distribution pipelines.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              id="create-event-top-btn"
-              onClick={onOpenCreateModal}
-              className="inline-flex items-center justify-center space-x-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-teal-600/20 hover:bg-teal-700 transition-all hover:scale-[1.02]"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Create New Event</span>
-            </button>
-          </div>
-
-          {/* Top-line KPI Cards */}
-          <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
-              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-                <span>Active Campaigns</span>
-                <Layers className="h-4 w-4 text-indigo-600" />
-              </div>
-              <div className="text-2xl font-extrabold text-slate-900 mt-2">{activeEventsCount}</div>
-              <span className="text-[11px] text-slate-500 font-medium">{events.length} total registered</span>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
-              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-                <span>Total Badges Created</span>
-                <Sparkles className="h-4 w-4 text-teal-600" />
-              </div>
-              <div className="text-2xl font-extrabold text-slate-900 mt-2">
-                {totalAdvocates.toLocaleString()}
-              </div>
-              <span className="text-[11px] text-teal-600 font-bold">+28% this month</span>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
-              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-                <span>Total Social Shares</span>
-                <Share2 className="h-4 w-4 text-sky-600" />
-              </div>
-              <div className="text-2xl font-extrabold text-slate-900 mt-2">
-                {totalShares.toLocaleString()}
-              </div>
-              <span className="text-[11px] text-slate-500 font-medium">2.6x shares / attendee</span>
-            </div>
-
-            {/* <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
-              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-                <span>Total Earned Media (EMV)</span>
-                <DollarSign className="h-4 w-4 text-emerald-600" />
-              </div>
-              <div className="text-2xl font-extrabold text-emerald-600 mt-2">
-                ${totalEMV.toLocaleString()}
-              </div>
-              <span className="text-[11px] text-emerald-700 font-bold">Industry CPM benchmark</span>
-            </div> */}
-          </div>
-
-        </div>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-6 border-b border-slate-200">
-          
-          {/* Status Tabs */}
-          <div className="flex items-center space-x-1.5 rounded-xl bg-slate-200/60 p-1 text-xs">
-            {(['all', 'active', 'draft', 'archived'] as const).map((st) => (
-              <button
-                key={st}
-                onClick={() => setStatusFilter(st)}
-                className={`rounded-lg px-3 py-1.5 font-bold capitalize transition-all ${
-                  statusFilter === st
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {st}
-              </button>
-            ))}
-          </div>
-
-          {/* Search box */}
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search event name, venue..."
-              className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-hidden"
-            />
-          </div>
-
-        </div>
-
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
-          {filteredEvents.map((evt) => (
-            <div
-              key={evt.id}
-              className={`group rounded-2xl border transition-all duration-200 flex flex-col justify-between bg-white shadow-xs hover:shadow-xl ${
-                evt.status === 'archived'
-                  ? 'border-slate-200/60 opacity-80'
-                  : 'border-slate-200/90'
+              onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}
+              className={`h-10 px-4 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all ${
+                statusFilter === 'active'
+                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                  : 'bg-slate-50 dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              <div className="p-5 sm:p-6 space-y-4">
-                
-                {/* Status + Actions */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
-                      evt.status === 'active'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : evt.status === 'draft'
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                        : 'bg-slate-100 text-slate-600 border border-slate-200'
-                    }`}
-                  >
-                    {evt.status}
-                  </span>
-
-                  {/* Archive / Restore toggle */}
-                  <button
-                    onClick={() => onToggleArchive(evt.id)}
-                    title={evt.status === 'archived' ? 'Restore event' : 'Archive event'}
-                    className="flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
-                  >
-                    {evt.status === 'archived' ? (
-                      <>
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        <span className="text-[11px]">Restore</span>
-                      </>
-                    ) : (
-                      <>
-                        <Archive className="h-3.5 w-3.5" />
-                        <span className="text-[11px]">Archive</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Event Title & Details */}
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors line-clamp-1">
-                    {evt.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                    {evt.tagline}
-                  </p>
-                </div>
-
-                {/* Date & Location */}
-                <div className="space-y-1.5 text-xs text-slate-600 pt-1">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>{evt.dates}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{evt.venue}</span>
-                  </div>
-                </div>
-
-                {/* Metrics ribbon */}
-                <div className="grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-3 border border-slate-100 text-center">
-                  <div>
-                    <div className="text-xs font-extrabold text-slate-900">
-                      {evt.postersCount.toLocaleString()}
-                    </div>
-                    <div className="text-[10px] text-slate-500 uppercase font-semibold">Posters</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-extrabold text-teal-600">
-                      {evt.sharesCount.toLocaleString()}
-                    </div>
-                    <div className="text-[10px] text-slate-500 uppercase font-semibold">Shares</div>
-                  </div>
-                  {/* <div>
-                    <div className="text-xs font-extrabold text-emerald-600">
-                      ${Math.round(evt.emvValue / 1000)}k
-                    </div>
-                    <div className="text-[10px] text-slate-500 uppercase font-semibold">EMV</div>
-                  </div> */}
-                </div>
-
-              </div>
-
-              {/* Card Footer Actions */}
-              <div className="border-t border-slate-100 bg-slate-50/50 p-3.5 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  {/* <button
-                    onClick={() => onLaunchStudio(evt)}
-                    className="rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200/80 px-2.5 py-1.5 text-xs font-bold text-teal-800 transition-colors"
-                  >
-                    Badge Studio
-                  </button> */}
-                  <button
-                    onClick={() => onLaunchGallery(evt)}
-                    className="rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-200/80 px-2.5 py-1.5 text-xs font-bold text-sky-800 transition-colors"
-                  >
-                    Gallery
-                  </button>
-
-                  {/* NEW: Copy Link Button */}
-                  <button 
-                    onClick={() => handleCopyLink(evt.slug)} 
-                    className="flex items-center space-x-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-                    title="Copy Public Attendee Link"
-                  >
-                    {copiedSlug === evt.slug ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Link className="h-3.5 w-3.5 text-slate-500" />}
-                    <span className={copiedSlug === evt.slug ? "text-emerald-600" : ""}>{copiedSlug === evt.slug ? 'Copied!' : 'Copy Link'}</span>
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => onEditEvent(evt)}
-                  className="flex items-center space-x-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors"
-                >
-                  <Edit3 className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Configure</span>
-                </button>
-              </div>
-
-            </div>
-          ))}
+              <Filter className="h-4 w-4" />
+              <span>Filter Status</span>
+            </button>
+            <button
+              onClick={handleExportSummaryCsv}
+              className="h-10 px-4 rounded-xl border bg-slate-50 dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-2 transition-all"
+            >
+              <Download className="h-4 w-4" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={onOpenCreateModal}
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02]"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create Campaign</span>
+            </button>
+          </div>
         </div>
-
       </div>
 
+      {/* 3 High-Impact KPI Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Metric 1: Active Campaigns */}
+        <div className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
+          isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-300 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Active Campaigns
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              {activeEventsCount} Active
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2 my-1">
+            <span className="text-3xl font-extrabold tracking-tight">
+              {activeEventsCount}
+            </span>
+            <span className="text-sm font-semibold text-slate-400">
+              / {events.length} Total
+            </span>
+          </div>
+          <div className="flex items-center justify-between pt-2 text-xs text-slate-500 border-t border-slate-200 dark:border-slate-800">
+            <span className="text-emerald-500 font-semibold flex items-center gap-1">
+              <TrendingUp className="h-3.5 w-3.5" />
+              +12% MoM pacing
+            </span>
+            <span>{draftEventsCount} in review</span>
+          </div>
+        </div>
+
+        {/* Metric 2: Total Passes Issued */}
+        <div className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
+          isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-300 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Passes Claimed
+            </span>
+            <div className="h-7 w-7 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center">
+              <Ticket className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 my-1">
+            <span className="text-3xl font-extrabold tracking-tight font-mono">
+              {totalPosters.toLocaleString()}
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-400 text-[10px] font-bold font-mono">
+              96.5%
+            </span>
+          </div>
+          <div className="flex items-center gap-2 pt-2 text-xs text-slate-500 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-end gap-1 h-3.5 w-24">
+              <span className="w-1.5 h-2 rounded bg-sky-400" />
+              <span className="w-1.5 h-3 rounded bg-sky-400" />
+              <span className="w-1.5 h-2.5 rounded bg-sky-400" />
+              <span className="w-1.5 h-3.5 rounded bg-emerald-500" />
+              <span className="w-1.5 h-3 rounded bg-emerald-500" />
+              <span className="w-1.5 h-3.5 rounded bg-emerald-500" />
+            </div>
+            <span>Target 50,000 passes</span>
+          </div>
+        </div>
+
+        {/* Metric 3: Viral Share Velocity */}
+        <div className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
+          isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-300 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Viral Share Velocity
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400 text-[10px] font-bold">
+              2.6x Mult
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2 my-1">
+            <span className="text-3xl font-extrabold tracking-tight font-mono">
+              {totalShares.toLocaleString()}
+            </span>
+            <span className="text-xs text-slate-400">shares</span>
+          </div>
+          <div className="flex items-center justify-between pt-2 text-xs text-slate-500 border-t border-slate-200 dark:border-slate-800">
+            <span className="flex items-center gap-1 text-slate-400">
+              <Share2 className="h-3.5 w-3.5 text-teal-500" />
+              LinkedIn & X Amplified
+            </span>
+            <span className="font-semibold text-teal-500">+18.4%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls & Filter Toolbar */}
+      <div className={`p-3 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 ${
+        isDark ? 'bg-slate-900/70 border-white/10' : 'bg-white border-slate-300 shadow-sm'
+      }`}>
+        {/* Segmented Tab Switcher */}
+        <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl w-full md:w-auto border border-slate-200 dark:border-slate-700">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              statusFilter === 'all'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            All Campaigns <span className="ml-1 text-[11px] font-normal text-slate-400">{events.length}</span>
+          </button>
+          <button
+            onClick={() => setStatusFilter('active')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              statusFilter === 'active'
+                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Live <span className="ml-1 text-[11px] font-semibold text-emerald-500">{activeEventsCount}</span>
+          </button>
+          <button
+            onClick={() => setStatusFilter('draft')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              statusFilter === 'draft'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Drafts <span className="ml-1 text-[11px] font-normal text-slate-400">{draftEventsCount}</span>
+          </button>
+          <button
+            onClick={() => setStatusFilter('archived')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              statusFilter === 'archived'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Archived <span className="ml-1 text-[11px] font-normal text-slate-400">{archivedEventsCount}</span>
+          </button>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, venue, slug..."
+            className={`w-full h-9 pl-9 pr-4 rounded-xl text-xs border outline-none transition-all ${
+              isDark
+                ? 'bg-slate-800/80 border-white/10 text-slate-200 placeholder-slate-500 focus:border-emerald-500'
+                : 'bg-slate-50 border-slate-300 text-slate-800 placeholder-slate-400 focus:border-emerald-500'
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* Events Grid */}
+      {filteredEvents.length === 0 ? (
+        <div className={`p-12 text-center rounded-2xl border ${
+          isDark ? 'bg-slate-900/40 border-white/10' : 'bg-white border-slate-300 shadow-sm'
+        }`}>
+          <Ticket className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+          <h3 className="text-base font-bold mb-1">No event campaigns found</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+            Try adjusting your search query or filter options, or create a brand new campaign.
+          </p>
+          <button
+            onClick={onOpenCreateModal}
+            className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-md hover:bg-emerald-600 transition-all"
+          >
+            Create New Event
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredEvents.map((evt) => {
+            const isLive = evt.status === 'active';
+
+            return (
+              <div
+                key={evt.id}
+                className={`group rounded-2xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between overflow-hidden ${
+                  isDark
+                    ? 'bg-slate-900/80 border-white/10 hover:border-emerald-500/40'
+                    : 'bg-white border-slate-300 hover:border-emerald-500/50 shadow-sm hover:shadow-md'
+                }`}
+              >
+                {/* Card Top Header & Status */}
+                <div className="p-5 pb-3">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                      isLive
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                        : evt.status === 'draft'
+                        ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                        : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}>
+                      {isLive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                      {evt.status}
+                    </span>
+
+                    <button
+                      onClick={() => handleCopyLink(evt.slug)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+                        copiedSlug === evt.slug
+                          ? 'bg-emerald-500 text-white border-emerald-500'
+                          : isDark
+                          ? 'bg-slate-800/80 border-white/10 text-slate-300 hover:bg-slate-800'
+                          : 'bg-slate-50 border-slate-300 text-slate-600 hover:bg-slate-100'
+                      }`}
+                      title="Copy Public Studio Link"
+                    >
+                      {copiedSlug === evt.slug ? (
+                        <>
+                          <Check className="h-3 w-3" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <LinkIcon className="h-3 w-3" />
+                          <span className="font-mono text-[10px]">/{evt.slug}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
+                    {evt.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                    {evt.tagline || 'Digital pass and advocate amplification campaign for registered summit attendees.'}
+                  </p>
+
+                  <div className="mt-3 space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{evt.dates}</span>
+                    </div>
+                    {evt.venue && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{evt.venue}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Metric Pills */}
+                  <div className="grid grid-cols-2 gap-2 mt-4 text-center">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700">
+                      <div className="text-[10px] text-slate-500 font-semibold uppercase">Posters Claimed</div>
+                      <div className="font-mono font-bold text-sm mt-0.5">{evt.postersCount || 0}</div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700">
+                      <div className="text-[10px] text-slate-500 font-semibold uppercase">Total Shares</div>
+                      <div className="font-mono font-bold text-sm mt-0.5">{evt.sharesCount || 0}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Actions Footer */}
+                <div className={`p-3 px-5 border-t flex items-center justify-between gap-2 ${
+                  isDark ? 'bg-slate-950/40 border-white/10' : 'bg-slate-50/70 border-slate-300'
+                }`}>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => onEditEvent(evt)}
+                      className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+                      title="Edit Campaign"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onLaunchGallery(evt)}
+                      className="p-2 rounded-lg text-slate-500 hover:text-sky-500 hover:bg-sky-500/10 transition-colors"
+                      title="View Moments Gallery"
+                    >
+                      <Image className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onToggleArchive(evt.id)}
+                      className="p-2 rounded-lg text-slate-500 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                      title={evt.status === 'archived' ? 'Restore Campaign' : 'Archive Campaign'}
+                    >
+                      {evt.status === 'archived' ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => onLaunchStudio(evt)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all"
+                  >
+                    <span>Launch Studio</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

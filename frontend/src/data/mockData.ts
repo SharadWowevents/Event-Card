@@ -370,13 +370,6 @@ export const PLATFORM_DISTRIBUTION = [
   { platform: 'Instagram Stories', sharePercentage: 5, shares: 449, reachEstimate: 45000, engagement: '6.1%' }
 ];
 
-export const ROLE_DISTRIBUTION = [
-  { role: 'Attendees', count: 2410, percentage: 70.6, color: '#0ea5e9' },
-  { role: 'Speakers', count: 180, percentage: 5.3, color: '#a855f7' },
-  { role: 'Exhibitors', count: 620, percentage: 18.2, color: '#10b981' },
-  { role: 'Sponsors', count: 200, percentage: 5.9, color: '#f59e0b' }
-];
-
 export const TEAM_MEMBERS: TeamMember[] = [
   {
     id: 'tm-1',

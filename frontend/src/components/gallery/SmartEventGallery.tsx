@@ -4,6 +4,7 @@ import {
   Loader2, MapPin, Calendar, Download, Heart, Share2, X, Check, Bookmark
 } from 'lucide-react';
 import { EventItem, AttendeeLead, EventMoment } from '../../types';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 interface SmartEventGalleryProps {
   event: EventItem;
@@ -159,7 +160,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
     const shareData = {
       title: activeMoment.title,
       text: `Check out this incredible moment from ${event.name}!`,
-      url: activeMoment.imageUrl
+      url: getMediaUrl(activeMoment.imageUrl)
     };
 
     if (navigator.share) {
@@ -170,7 +171,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
       }
     } else {
       try {
-        await navigator.clipboard.writeText(activeMoment.imageUrl);
+        await navigator.clipboard.writeText(getMediaUrl(activeMoment.imageUrl));
         setCopiedLink(true);
         setTimeout(() => setCopiedLink(false), 2000);
       } catch (err) {
@@ -182,7 +183,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
   const handleDownloadMoment = () => {
     if (!activeMoment) return;
     const link = document.createElement('a');
-    link.href = activeMoment.imageUrl;
+    link.href = getMediaUrl(activeMoment.imageUrl);
     link.target = '_blank';
     link.download = `${activeMoment.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-hd.jpg`;
     document.body.appendChild(link);
@@ -256,7 +257,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
                 ) : (
                   attendees.map((attendee) => (
                     <div key={attendee.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs">
-                      <img src={attendee.badgeThumbnail} alt={attendee.name} className="w-full h-full object-cover" />
+                      <img src={getMediaUrl(attendee.badgeThumbnail)} alt={attendee.name} className="w-full h-full object-cover" />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 to-transparent p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
                         <p className="text-white font-bold text-sm truncate">{attendee.name}</p>
                         <p className="text-slate-300 text-xs truncate">{attendee.company}</p>
@@ -281,7 +282,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
                     const isSaved = savedMomentIds.includes(moment._id);
                     return (
                       <div key={moment._id} onClick={() => setActiveMoment(moment)} className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs cursor-pointer">
-                        <img src={moment.imageUrl} alt="Event Moment" className="w-full h-full object-cover" />
+                        <img src={getMediaUrl(moment.imageUrl)} alt="Event Moment" className="w-full h-full object-cover" />
                         
                         {/* Save indicator badge on the grid thumbnail */}
                         {isSaved && (
@@ -344,7 +345,7 @@ export function SmartEventGallery({ event, onNavigateToStudio }: SmartEventGalle
             
             {/* Left: Image */}
             <div className="flex-1 bg-black flex items-center justify-center relative min-h-[40vh] md:min-h-0">
-               <img src={activeMoment.imageUrl} alt={activeMoment.title} className="w-full h-full object-contain" />
+               <img src={getMediaUrl(activeMoment.imageUrl)} alt={activeMoment.title} className="w-full h-full object-contain" />
             </div>
             
             {/* Right: Dark Sidebar Details */}

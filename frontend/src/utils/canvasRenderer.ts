@@ -1,4 +1,5 @@
 import { AttendeeBadgeData, EventItem } from '../types';
+import { getMediaUrl } from './mediaUtils';
 
 const imageCache: { [url: string]: HTMLImageElement } = {};
 const getCachedImage = (url: string): Promise<HTMLImageElement> => {
@@ -20,7 +21,7 @@ export const renderBadgeToCanvas = async (
   let frameImg: HTMLImageElement | null = null;
   if (badge.customFrameUrl) {
     try { 
-      frameImg = await getCachedImage(badge.customFrameUrl); 
+      frameImg = await getCachedImage(getMediaUrl(badge.customFrameUrl)); 
     } catch (err) { 
       console.error("Failed to load custom frame", err); 
     }
@@ -80,22 +81,26 @@ export const renderBadgeToCanvas = async (
   if (align === 'left') textX = 90 * scaleRatio;
   if (align === 'right') textX = WIDTH - (90 * scaleRatio);
 
-  ctx.font = `bold ${nameSize}px "${fontFamily}", sans-serif`;
-  if (textConfig.nameUseGradient) {
-    const textGrad = ctx.createLinearGradient(0, nameY - nameSize, WIDTH, nameY);
-    textGrad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9'); 
-    textGrad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
-    ctx.fillStyle = textGrad;
-  } else {
-    ctx.fillStyle = textConfig.nameColor || '#ffffff';
+  if (textConfig.showName !== false) {
+    ctx.font = `bold ${nameSize}px "${fontFamily}", sans-serif`;
+    if (textConfig.nameUseGradient) {
+      const textGrad = ctx.createLinearGradient(0, nameY - nameSize, WIDTH, nameY);
+      textGrad.addColorStop(0, event.theme?.primaryColor || '#0ea5e9'); 
+      textGrad.addColorStop(1, event.theme?.secondaryColor || '#10b981');
+      ctx.fillStyle = textGrad;
+    } else {
+      ctx.fillStyle = textConfig.nameColor || '#ffffff';
+    }
+    ctx.fillText(badge.name || 'Your Name', textX, nameY);
   }
-  ctx.fillText(badge.name || 'Your Name', textX, nameY);
 
-  ctx.font = `600 ${subSize}px "${fontFamily}", sans-serif`;
-  ctx.fillStyle = textConfig.subTextColor || '#e2e8f0';
-  const roleText = badge.role ? badge.role.charAt(0).toUpperCase() + badge.role.slice(1) : '';
-  const subText = [roleText, badge.title, badge.company].filter(Boolean).join(' • ');
-  ctx.fillText(subText || 'Event Attendee', textX, subY);
+  if (textConfig.showRoleCompany !== false) {
+    ctx.font = `600 ${subSize}px "${fontFamily}", sans-serif`;
+    ctx.fillStyle = textConfig.subTextColor || '#e2e8f0';
+    const roleText = badge.role ? badge.role.charAt(0).toUpperCase() + badge.role.slice(1) : '';
+    const subText = [roleText, badge.title, badge.company].filter(Boolean).join(' • ');
+    ctx.fillText(subText || 'Event Attendee', textX, subY);
+  }
 
   if (textConfig.showVenue !== false || textConfig.showDate !== false) {
     ctx.textAlign = 'center'; 

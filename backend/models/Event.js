@@ -52,14 +52,18 @@ const eventSchema = new mongoose.Schema(
         showVenue: { type: Boolean, default: true },
         showDate: { type: Boolean, default: true },
 
-        // NEW TYPOGRAPHY FIELDS
+        // TYPOGRAPHY & VISIBILITY FIELDS
+        showName: { type: Boolean, default: true },
+        showRoleCompany: { type: Boolean, default: true },
         nameFontSize: { type: Number, default: 80 },
         nameColor: { type: String, default: '#ffffff' },
         nameUseGradient: { type: Boolean, default: false },
         nameY: { type: Number, default: 1130 },
         subTextFontSize: { type: Number, default: 36 },
         subTextColor: { type: String, default: '#e2e8f0' },
-        subTextY: { type: Number, default: 1210 }
+        subTextY: { type: Number, default: 1210 },
+        bottomTextX: { type: Number, default: 540 },
+        bottomTextY: { type: Number, default: 1290 }
       },
       selfiePositioning: {
         shape: { type: String, enum: ['circle', 'square'], default: 'circle' },

@@ -37,7 +37,7 @@ export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareMod
     exportCanvasToPng(canvas, `${event.slug}-badge.png`);
 
     if (badge.leadId) {
-      await fetch(`/api/badges/${badge.leadId}/track`, {
+      await fetch(`http://localhost:5011/api/badges/${badge.leadId}/track`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'download' })
       }).catch(console.error);
