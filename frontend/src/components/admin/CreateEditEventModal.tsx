@@ -484,8 +484,10 @@ export function CreateEditEventModal({ isOpen, onClose, eventToEdit, onSave }: C
               {customFrames.length === 0 ? (<div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 text-xs">No custom frames uploaded yet. Ensure you save the event first before uploading.</div>) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {customFrames.map((frame) => (
-                    <div key={frame._id || frame.id} className="relative group rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800">
-                      <img src={getMediaUrl(frame.url)} alt={frame.label} className="w-full aspect-[4/5] object-cover" />
+                    <div key={frame._id || frame.id} className="relative group rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden bg-slate-900/5 dark:bg-slate-950 flex flex-col items-center justify-center">
+                      <div className="w-full aspect-[4/5] flex items-center justify-center p-2">
+                        <img src={getMediaUrl(frame.url)} alt={frame.label} className="max-w-full max-h-full object-contain drop-shadow-sm" />
+                      </div>
                       <button type="button" onClick={() => handleRemoveFrame(frame._id || frame.id!)} className="absolute top-2 right-2 rounded-md bg-rose-500 p-1.5 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"><Trash2 className="h-3.5 w-3.5" /></button>
                       <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 text-[10px] font-bold text-slate-900 dark:text-white truncate">{frame.label}</div>
                     </div>

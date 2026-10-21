@@ -4,6 +4,17 @@
  */
 export const getMediaUrl = (url?: string | null): string => {
   if (!url) return '';
+
+  // Base backend URL (e.g. "http://localhost:5011/api" or "http://localhost:5011" or "/api")
+  const backend = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5011').replace(/\/$/, '');
+  // Base origin without trailing /api
+  const backendOrigin = backend.replace(/\/api$/, '');
+
+  // Normalize legacy localhost:5000 URLs saved in previous database versions
+  if (url.includes('localhost:5000')) {
+    url = url.replace('http://localhost:5000', backendOrigin);
+  }
+
   if (
     url.startsWith('http://') ||
     url.startsWith('https://') ||
@@ -12,8 +23,20 @@ export const getMediaUrl = (url?: string | null): string => {
   ) {
     return url;
   }
-  const backend = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5011';
-  const cleanBackend = backend.replace(/\/$/, '');
+
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${cleanBackend}${cleanPath}`;
+
+  // If path already starts with /api/, mount directly onto backendOrigin to prevent /api/api/...
+  if (cleanPath.startsWith('/api/')) {
+    return `${backendOrigin}${cleanPath}`;
+  }
+
+  // If path starts with /uploads/, redirect to /api/uploads/
+  if (cleanPath.startsWith('/uploads/')) {
+    return `${backendOrigin}/api${cleanPath}`;
+  }
+
+  // Default fallback
+  return `${backend}${cleanPath}`;
 };
+

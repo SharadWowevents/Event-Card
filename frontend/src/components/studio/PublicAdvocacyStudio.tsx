@@ -30,6 +30,9 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
   const [isStarted, setIsStarted] = useState(true);
 
+  // Frame aspect ratio & dimension tracking
+  const [frameDimensions, setFrameDimensions] = useState<{ width: number; height: number } | null>(null);
+
   // DYNAMIC FORM STATE
   const [dynamicForm, setDynamicForm] = useState<Record<string, string>>({});
   const formFields = event.templateConfig?.formFields || [];
@@ -42,6 +45,25 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
       onUpdateBadge({ themeStyle: 'custom' as any, customFrameUrl: event.customFrames[0].url });
     }
   }, [hasCustomFrames, event.customFrames, badge.customFrameUrl, onUpdateBadge]);
+
+  useEffect(() => {
+    if (!badge.customFrameUrl) {
+      setFrameDimensions(null);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = getMediaUrl(badge.customFrameUrl);
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        setFrameDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      }
+    };
+  }, [badge.customFrameUrl]);
+
+  const frameAspect = frameDimensions && frameDimensions.height > 0
+    ? frameDimensions.width / frameDimensions.height
+    : (4 / 5);
 
   useEffect(() => {
     if (!event.startDate) return;
@@ -143,10 +165,10 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
     if (!videoRef.current) return;
     const video = videoRef.current;
     
-    let targetWidth = 1080;
-    let targetHeight = 1350;
+    let targetWidth = frameDimensions?.width || 1080;
+    let targetHeight = frameDimensions?.height || 1350;
 
-    if (badge.customFrameUrl) {
+    if (!frameDimensions && badge.customFrameUrl) {
       try {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -290,25 +312,76 @@ export function PublicAdvocacyStudio({ event, badge, onUpdateBadge }: PublicAdvo
         {step === 'camera' && (
           <div className="w-full max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
             <button onClick={() => setStep('details')} className="mb-4 inline-flex items-center space-x-1.5 text-sm font-semibold text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg hover:bg-black/60 transition-colors"><ArrowLeft className="h-4 w-4" /><span>Back to Details</span></button>
-            <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl text-center space-y-6">
-              <div><h2 className="text-xl font-extrabold text-slate-900">Snap Your Selfie</h2></div>
-              <div className="relative mx-auto w-full max-w-md rounded-3xl shadow-inner overflow-hidden border border-slate-200 bg-slate-900">
-                <div className="absolute inset-0 z-0">
-                  {isCameraLoading ? (<div className="h-full text-white flex flex-col items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mb-2" /><span className="text-[10px] font-bold">Starting...</span></div>) : cameraError ? (<div className="h-full text-white flex flex-col items-center justify-center px-4 text-center"><AlertCircle className="h-6 w-6 mx-auto mb-1 text-rose-400" /><p className="text-xs font-semibold">Error</p></div>) : (<video autoPlay playsInline muted ref={setVideoNode} className="w-full h-full object-cover transform -scale-x-100" />)}
+            <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl text-center space-y-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Snap Your Selfie</h2>
+                {frameDimensions && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-mono font-semibold mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {frameDimensions.width} × {frameDimensions.height} Frame
+                  </div>
+                )}
+              </div>
+              <div 
+                className="relative mx-auto w-full max-w-md rounded-3xl shadow-inner overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-900 flex items-center justify-center transition-all duration-200"
+                style={{ aspectRatio: `${frameAspect}` }}
+              >
+                <div className="absolute inset-0 z-0 flex items-center justify-center">
+                  {isCameraLoading ? (
+                    <div className="h-full text-white flex flex-col items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                      <span className="text-[10px] font-bold">Starting camera...</span>
+                    </div>
+                  ) : cameraError ? (
+                    <div className="h-full text-white flex flex-col items-center justify-center px-4 text-center">
+                      <AlertCircle className="h-6 w-6 mx-auto mb-1 text-rose-400" />
+                      <p className="text-xs font-semibold">{cameraError}</p>
+                    </div>
+                  ) : (
+                    <video
+                      autoPlay
+                      playsInline
+                      muted
+                      ref={setVideoNode}
+                      className="w-full h-full object-cover transform -scale-x-100"
+                    />
+                  )}
                 </div>
-                {badge.customFrameUrl ? (<img src={getMediaUrl(badge.customFrameUrl)} alt="Custom Frame Overlay" className="relative z-20 w-full h-auto pointer-events-none drop-shadow-xl block" />) : (<div className="relative z-20 w-full aspect-[4/5] pointer-events-none opacity-50" style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'} 0%, ${event.theme?.secondaryColor || '#10b981'} 100%)` }} />)}
+                {badge.customFrameUrl ? (
+                  <img
+                    src={getMediaUrl(badge.customFrameUrl)}
+                    alt=""
+                    className="absolute inset-0 z-20 w-full h-full object-fill pointer-events-none drop-shadow-xl"
+                    onLoad={(e) => {
+                      const img = e.currentTarget;
+                      if (img.naturalWidth && img.naturalHeight) {
+                        setFrameDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+                      }
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0 z-20 pointer-events-none opacity-30"
+                    style={{
+                      background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0ea5e9'}20 0%, ${event.theme?.secondaryColor || '#10b981'}20 100%)`
+                    }}
+                  />
+                )}
               </div>
               {hasCustomFrames && (
                 <div className="pt-2">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">1. Choose Your Frame</span>
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">1. Choose Your Frame</span>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {event.customFrames?.map((frame) => (<button key={frame.id || frame._id} onClick={() => onUpdateBadge({ themeStyle: 'custom' as any, customFrameUrl: frame.url })} className={`px-3.5 py-2 rounded-full text-xs font-bold transition-all ${badge.customFrameUrl === frame.url ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'}`} style={badge.customFrameUrl === frame.url ? { background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` } : {}}>{frame.label}</button>))}
+                    {event.customFrames?.map((frame) => (<button key={frame.id || frame._id} onClick={() => onUpdateBadge({ themeStyle: 'custom' as any, customFrameUrl: frame.url })} className={`px-3.5 py-2 rounded-full text-xs font-bold transition-all ${badge.customFrameUrl === frame.url ? 'text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700'}`} style={badge.customFrameUrl === frame.url ? { background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` } : {}}>{frame.label}</button>))}
                   </div>
                 </div>
               )}
-              <div className="pt-4 border-t border-slate-200 space-y-3">
+              <div className="pt-4 border-t border-slate-200 dark:border-white/10 space-y-3">
                 <button onClick={handleCapture} disabled={!!cameraError || isCameraLoading} className="w-full flex items-center justify-center space-x-2 rounded-xl px-5 py-3.5 text-sm font-bold text-white disabled:opacity-50 transition-all shadow-md" style={{ background: `linear-gradient(135deg, ${event.theme?.primaryColor || '#0d9488'}, ${event.theme?.secondaryColor || '#059669'})` }}><Camera className="h-5 w-5" /><span>{hasCustomFrames ? '2. Capture Selfie' : 'Capture Selfie'}</span></button>
-                <div><input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" /><button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center space-x-2 rounded-xl border border-slate-300 bg-slate-50 px-5 py-3 text-xs font-bold hover:bg-slate-100 text-slate-700 transition-colors"><Upload className="h-4 w-4" /><span>Upload a Photo Instead</span></button></div>
+                <div><input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" /><button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center space-x-2 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-800/80 px-5 py-3 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"><Upload className="h-4 w-4" /><span>Upload a Photo Instead</span></button></div>
               </div>
             </div>
           </div>

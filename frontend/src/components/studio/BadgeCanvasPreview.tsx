@@ -3,6 +3,7 @@ import { Download, Share2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AttendeeBadgeData, EventItem } from '../../types';
 import { exportCanvasToPng, renderBadgeToCanvas } from '../../utils/canvasRenderer';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 interface BadgeCanvasPreviewProps {
   badge: AttendeeBadgeData;
@@ -14,6 +15,22 @@ interface BadgeCanvasPreviewProps {
 
 export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareModal, canvasRef }: BadgeCanvasPreviewProps) {
   const [avatarImg, setAvatarImg] = useState<HTMLImageElement | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<number>(4 / 5);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 1080, height: 1350 });
+
+  useEffect(() => {
+    if (badge.customFrameUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = getMediaUrl(badge.customFrameUrl);
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          setAspectRatio(img.naturalWidth / img.naturalHeight);
+          setDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+        }
+      };
+    }
+  }, [badge.customFrameUrl]);
 
   useEffect(() => {
     if (!badge.avatarUrl) { setAvatarImg(null); return; }
@@ -26,7 +43,12 @@ export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareMod
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    renderBadgeToCanvas(canvas, badge, event, avatarImg);
+    renderBadgeToCanvas(canvas, badge, event, avatarImg).then(() => {
+      if (canvas.width && canvas.height) {
+        setAspectRatio(canvas.width / canvas.height);
+        setDimensions({ width: canvas.width, height: canvas.height });
+      }
+    });
   }, [badge, event, avatarImg, canvasRef]);
 
   const handleDownload = async () => {
@@ -52,12 +74,17 @@ export function BadgeCanvasPreview({ badge, event, onUpdateBadge, onOpenShareMod
         <div className="w-full flex items-center justify-between pb-3 text-xs text-slate-400">
           <div className="flex items-center space-x-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">1080 × 1350 PX (HD)</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">
+              {dimensions.width} × {dimensions.height} PX (HD)
+            </span>
           </div>
         </div>
         
         {/* Canvas Area */}
-        <div className="w-full aspect-[4/5] max-w-[500px] flex items-center justify-center rounded-xl overflow-hidden bg-slate-900 shadow-2xl">
+        <div 
+          className="w-full max-w-[500px] flex items-center justify-center rounded-xl overflow-hidden bg-slate-900 shadow-2xl transition-all duration-200"
+          style={{ aspectRatio: `${aspectRatio}` }}
+        >
           <canvas ref={canvasRef} className="w-full h-full object-contain" />
         </div>
       </div>

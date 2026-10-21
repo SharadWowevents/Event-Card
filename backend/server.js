@@ -22,6 +22,7 @@ app.use(cors());
 // Middleware
 // Increased body limit to accept high-resolution webcam snapshots (base64 data URIs)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB & Initialize Engines
 connectDB().then(() => {
