@@ -106,6 +106,56 @@ router.patch('/theme', protect, async (req, res) => {
   }
 });
 
+// Get User Notification Read State (Protected)
+router.get('/notifications/read-state', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('readNotificationIds lastNotificationsReadAt');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({
+      readNotificationIds: user.readNotificationIds || [],
+      lastNotificationsReadAt: user.lastNotificationsReadAt || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark Notifications As Read (Protected)
+router.post('/notifications/mark-read', protect, async (req, res) => {
+  try {
+    const { ids, markAll, readAt } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const update = {};
+    if (markAll) {
+      update.lastNotificationsReadAt = readAt ? new Date(readAt) : new Date();
+    }
+    if (Array.isArray(ids) && ids.length > 0) {
+      const existing = new Set((user.readNotificationIds || []).map(String));
+      ids.forEach(id => {
+        if (id) existing.add(String(id));
+      });
+      // Cap at 500 items to avoid unbounded document growth
+      update.readNotificationIds = Array.from(existing).slice(-500);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      update,
+      { returnDocument: 'after' }
+    ).select('readNotificationIds lastNotificationsReadAt');
+
+    res.json({
+      success: true,
+      readNotificationIds: updatedUser.readNotificationIds || [],
+      lastNotificationsReadAt: updatedUser.lastNotificationsReadAt || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 3. Get All Team Members (Protected)
 router.get('/', protect, async (req, res) => {
   try {

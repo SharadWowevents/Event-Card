@@ -31,6 +31,39 @@ interface NotificationItem {
   eventItem?: EventItem;
 }
 
+const getNotifStorageKey = (email?: string) => `wowevents_notifs_read_${email || 'global'}`;
+
+interface ReadNotificationState {
+  readIds: string[];
+  lastReadAt: string | null;
+  initialized?: boolean;
+}
+
+const getStoredReadState = (email?: string): ReadNotificationState => {
+  try {
+    const raw = localStorage.getItem(getNotifStorageKey(email));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        readIds: Array.isArray(parsed.readIds) ? parsed.readIds : [],
+        lastReadAt: parsed.lastReadAt || null,
+        initialized: parsed.initialized ?? true
+      };
+    }
+  } catch (e) {
+    console.error('Failed to parse read notifications from localStorage', e);
+  }
+  return { readIds: [], lastReadAt: null, initialized: false };
+};
+
+const saveStoredReadState = (state: ReadNotificationState, email?: string) => {
+  try {
+    localStorage.setItem(getNotifStorageKey(email), JSON.stringify(state));
+  } catch (e) {
+    console.error('Failed to save read notifications to localStorage', e);
+  }
+};
+
 export function Header({
   currentView,
   onSelectView,
@@ -49,10 +82,50 @@ export function Header({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
+  const [, setReadState] = useState<ReadNotificationState>(() => getStoredReadState(user?.email));
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const notifContainerRef = useRef<HTMLDivElement>(null);
+
+  // Sync read notifications from backend if authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/team/notifications/read-state`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && (data.readNotificationIds || data.lastNotificationsReadAt)) {
+          const current = getStoredReadState(user?.email);
+          const mergedIds = Array.from(new Set([...current.readIds, ...(data.readNotificationIds || [])]));
+          let mergedLastReadAt = current.lastReadAt;
+          if (data.lastNotificationsReadAt) {
+            if (!mergedLastReadAt || new Date(data.lastNotificationsReadAt) > new Date(mergedLastReadAt)) {
+              mergedLastReadAt = data.lastNotificationsReadAt;
+            }
+          }
+          const nextState: ReadNotificationState = {
+            readIds: mergedIds,
+            lastReadAt: mergedLastReadAt,
+            initialized: true
+          };
+          saveStoredReadState(nextState, user?.email);
+          setReadState(nextState);
+
+          // Update current notifications in memory if any matched
+          setNotifications(prev => prev.map(n => {
+            if (!n.unread) return n;
+            const notifId = String(n.id);
+            if (mergedIds.includes(notifId)) return { ...n, unread: false };
+            return n;
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [user?.email]);
 
   // Load real notifications & attendees for search and bell dropdown
   useEffect(() => {
@@ -62,6 +135,10 @@ export function Header({
     fetch(`${import.meta.env.VITE_BACKEND_URL}/events/${eventId}/leads`)
       .then((res) => res.json())
       .then((data) => {
+        const stored = getStoredReadState(user?.email);
+        const readIdsSet = new Set(stored.readIds.map(String));
+        const lastReadTimestamp = stored.lastReadAt ? new Date(stored.lastReadAt).getTime() : 0;
+
         if (Array.isArray(data) && data.length > 0) {
           setRecentLeads(data);
           const notifs: NotificationItem[] = data.slice(0, 5).map((lead: any, idx: number) => {
@@ -69,20 +146,35 @@ export function Header({
               ? new Date(lead.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
               : 'Recent';
             const hasShared = lead.sharesCount && lead.sharesCount > 0;
+            const notifId = String(lead._id || idx);
+            const leadTime = lead.createdAt ? new Date(lead.createdAt).getTime() : 0;
+
+            let isUnread = false;
+            if (readIdsSet.has(notifId)) {
+              isUnread = false;
+            } else if (lastReadTimestamp > 0 && leadTime > 0 && leadTime <= lastReadTimestamp) {
+              isUnread = false;
+            } else if (!stored.initialized) {
+              isUnread = idx < 2;
+            } else {
+              isUnread = true;
+            }
+
             return {
-              id: lead._id || idx,
+              id: notifId,
               title: hasShared ? 'Pass Shared Online' : 'Verified Pass Claimed',
               text: `${lead.name || 'An attendee'} ${hasShared ? 'broadcasted their pass on social feeds' : `claimed a pass for ${selectedEvent.name}`}`,
               time: timeAgo,
-              unread: idx < 2, // First 2 marked as unread
+              unread: isUnread,
               view: 'admin-analytics',
               eventItem: selectedEvent
             };
           });
 
           // Add active campaign notification
+          const statusNotifId = `event-status-${eventId}`;
           notifs.push({
-            id: 'event-status',
+            id: statusNotifId,
             title: 'Live Campaign Active',
             text: `${selectedEvent.name} is running and collecting attendee registrations.`,
             time: 'Ongoing',
@@ -94,13 +186,18 @@ export function Header({
           setNotifications(notifs);
         } else {
           setRecentLeads([]);
+          const initialNotifId = `initial-${eventId}`;
+          const isInitialRead = readIdsSet.has(initialNotifId) || 
+            (lastReadTimestamp > 0 && selectedEvent.createdAt && new Date(selectedEvent.createdAt).getTime() <= lastReadTimestamp) ||
+            (lastReadTimestamp > 0 && !selectedEvent.createdAt);
+
           setNotifications([
             {
-              id: 'initial',
+              id: initialNotifId,
               title: 'Live Campaign Ready',
               text: `${selectedEvent.name} is active and ready for attendee pass claims.`,
               time: 'Just now',
-              unread: true,
+              unread: !isInitialRead,
               view: 'admin-events',
               eventItem: selectedEvent
             }
@@ -119,7 +216,7 @@ export function Header({
           }
         ]);
       });
-  }, [selectedEvent?.id, selectedEvent?._id]);
+  }, [selectedEvent?.id, selectedEvent?._id, user?.email]);
 
   // Click outside and ⌘K / Ctrl+K keyboard shortcut handler
   useEffect(() => {
@@ -195,13 +292,66 @@ export function Header({
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
+  const markSingleAsRead = (id: string | number) => {
+    const strId = String(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+
+    setReadState(prev => {
+      const updatedIds = Array.from(new Set([...prev.readIds, strId]));
+      const nextState: ReadNotificationState = {
+        ...prev,
+        readIds: updatedIds,
+        initialized: true
+      };
+      saveStoredReadState(nextState, user?.email);
+      return nextState;
+    });
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/team/notifications/mark-read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ ids: [strId], markAll: false })
+      }).catch(err => console.error('Failed to sync mark read to backend', err));
+    }
+  };
+
   const markAllAsRead = () => {
+    const allIds = notifications.map(n => String(n.id));
+    const nowIso = new Date().toISOString();
+
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+
+    setReadState(prev => {
+      const updatedIds = Array.from(new Set([...prev.readIds, ...allIds]));
+      const nextState: ReadNotificationState = {
+        readIds: updatedIds,
+        lastReadAt: nowIso,
+        initialized: true
+      };
+      saveStoredReadState(nextState, user?.email);
+      return nextState;
+    });
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/team/notifications/mark-read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ ids: allIds, markAll: true, readAt: nowIso })
+      }).catch(err => console.error('Failed to sync mark all read to backend', err));
+    }
   };
 
   const handleNotificationClick = (item: NotificationItem) => {
-    // Mark this notification as read
-    setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, unread: false } : n));
+    markSingleAsRead(item.id);
     if (item.eventItem && onSelectEvent) {
       onSelectEvent(item.eventItem);
     }
@@ -457,7 +607,22 @@ export function Header({
                             {n.unread && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />}
                             {n.title}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-mono shrink-0">{n.time}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-slate-400 font-mono shrink-0">{n.time}</span>
+                            {n.unread && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markSingleAsRead(n.id);
+                                }}
+                                title="Mark as read"
+                                className="p-0.5 rounded text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                              >
+                                <Check className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-300 leading-relaxed">{n.text}</div>
                       </div>

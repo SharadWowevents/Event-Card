@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema(
       enum: ['dark', 'light'],
       default: 'dark'
     },
+    readNotificationIds: {
+      type: [String],
+      default: []
+    },
+    lastNotificationsReadAt: {
+      type: Date,
+      default: null
+    },
     lastActive: { type: Date, default: Date.now }
   },
   { timestamps: true }
