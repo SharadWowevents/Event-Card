@@ -16,7 +16,13 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'User account has been removed or disabled.' });
     }
 
-    req.user = decoded;
+    req.user = { 
+      ...decoded, 
+      id: userExists._id.toString(),
+      role: userExists.role, 
+      name: userExists.name, 
+      email: userExists.email 
+    };
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Session expired or invalid' });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Search, Trash2, X, Key } from 'lucide-react';
+import { Users, UserPlus, Search, Trash2, X, Key, ShieldCheck, ChevronDown, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { AdminRole } from '../../types';
 import { TEAM_MEMBERS } from '../../data/mockData';
 
@@ -40,6 +40,14 @@ export function TeamManagement({ onLogout }: TeamManagementProps) {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
+
+  // Update Role State
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [selectedRoleMember, setSelectedRoleMember] = useState<any>(null);
+  const [newRole, setNewRole] = useState<AdminRole>('Event Admin');
+  const [roleSuccessMsg, setRoleSuccessMsg] = useState('');
+  const [roleErrorMsg, setRoleErrorMsg] = useState('');
+  const [isUpdatingRole, setIsUpdatingRole] = useState<string | null>(null);
 
   const currentUserId = getLoggedInUserId();
 
@@ -216,6 +224,65 @@ export function TeamManagement({ onLogout }: TeamManagementProps) {
     setPasswordModalOpen(true);
   };
 
+  const openRoleModal = (member: any) => {
+    setSelectedRoleMember(member);
+    setNewRole(member.role);
+    setRoleSuccessMsg('');
+    setRoleErrorMsg('');
+    setRoleModalOpen(true);
+  };
+
+  const handleRoleUpdate = async (member: any, targetRole: AdminRole) => {
+    if (!member || !targetRole || member.role === targetRole) return;
+    const token = await getOrAcquireToken();
+    setIsUpdatingRole(member._id);
+    setRoleErrorMsg('');
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/team/${member._id}/role`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ role: targetRole })
+      });
+
+      if (res.status === 401 || res.status === 403) return handleAuthFailure();
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update member role');
+      }
+
+      // Update members in local state
+      setMembers(prev => prev.map(m => m._id === member._id ? { ...m, role: targetRole } : m));
+
+      // If current user updated their own role, update local storage user
+      if (currentUserId === member._id) {
+        try {
+          const rawUser = localStorage.getItem('user');
+          if (rawUser) {
+            const parsedUser = JSON.parse(rawUser);
+            parsedUser.role = targetRole;
+            localStorage.setItem('user', JSON.stringify(parsedUser));
+          }
+        } catch {}
+      }
+
+      setRoleSuccessMsg(`Role for ${member.name} updated to ${targetRole} successfully!`);
+      setTimeout(() => {
+        setRoleSuccessMsg('');
+        setRoleModalOpen(false);
+      }, 1500);
+    } catch (err: any) {
+      setRoleErrorMsg(err.message || 'Failed to update role');
+      alert(err.message);
+    } finally {
+      setIsUpdatingRole(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-20 transition-colors">
       <div className="border-b border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/80 transition-colors">
@@ -239,6 +306,13 @@ export function TeamManagement({ onLogout }: TeamManagementProps) {
         {tempPasswordMsg && (
           <div className="mb-4 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 p-4 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
             {tempPasswordMsg}
+          </div>
+        )}
+
+        {roleSuccessMsg && (
+          <div className="mb-4 rounded-xl border border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-950/40 p-4 text-sm font-semibold text-purple-800 dark:text-purple-300 flex items-center gap-2 animate-in fade-in">
+            <Check className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+            <span>{roleSuccessMsg}</span>
           </div>
         )}
 
@@ -270,7 +344,34 @@ export function TeamManagement({ onLogout }: TeamManagementProps) {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">{member.role}</td>
+                    <td className="py-3.5 px-4">
+                      <div className="relative inline-flex items-center">
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleRoleUpdate(member, e.target.value as AdminRole)}
+                          disabled={isUpdatingRole === member._id}
+                          aria-label={`Change role for ${member.name}`}
+                          className={`appearance-none cursor-pointer pl-3 pr-7 py-1 rounded-lg text-xs font-bold border transition-all focus:outline-hidden focus:ring-2 focus:ring-purple-500/40 shadow-2xs ${
+                            member.role === 'Superadmin'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/15'
+                              : member.role === 'Event Admin'
+                              ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20 hover:bg-teal-500/15'
+                              : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20 hover:bg-slate-500/15'
+                          }`}
+                        >
+                          <option value="Superadmin">Superadmin</option>
+                          <option value="Event Admin">Event Admin</option>
+                          <option value="Viewer">Viewer</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-2 flex items-center">
+                          {isUpdatingRole === member._id ? (
+                            <Loader2 className="h-3 w-3 animate-spin text-purple-500" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 opacity-60" />
+                          )}
+                        </div>
+                      </div>
+                    </td>
                     <td className="py-3.5 px-4">
                       <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${member.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20'}`}>
                         {member.status}
@@ -278,14 +379,23 @@ export function TeamManagement({ onLogout }: TeamManagementProps) {
                     </td>
                     <td className="py-3.5 px-6 text-right">
                       <div className="flex items-center justify-end space-x-2">
+                        {/* Update Role Modal Button */}
+                        <button 
+                          onClick={() => openRoleModal(member)} 
+                          className="text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" 
+                          title="Update Role"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                        </button>
+
                         {/* Change Password Button */}
-                        <button onClick={() => openPasswordModal(member)} className="text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 p-1" title="Change Password">
+                        <button onClick={() => openPasswordModal(member)} className="text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Change Password">
                           <Key className="h-4 w-4" />
                         </button>
                         
                         {/* Remove Member Button - HIDDEN IF IT IS THE CURRENT USER */}
                         {currentUserId !== member._id && (
-                          <button onClick={() => handleRemoveMember(member._id)} className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1" title="Remove member">
+                          <button onClick={() => handleRemoveMember(member._id)} className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Remove member">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         )}
@@ -348,6 +458,137 @@ export function TeamManagement({ onLogout }: TeamManagementProps) {
                 <button type="submit" className="rounded-xl bg-teal-600 px-5 py-2 text-xs font-bold text-white hover:bg-teal-700 transition-colors">Save Password</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Update Role Modal */}
+      {roleModalOpen && selectedRoleMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 px-6 py-4">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Update Member Role</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Modify access permissions and tier</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setRoleModalOpen(false); setRoleSuccessMsg(''); setRoleErrorMsg(''); }} 
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Member Summary Card */}
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-xs border border-purple-500/20">
+                  {getInitials(selectedRoleMember.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-slate-900 dark:text-white truncate text-sm">{selectedRoleMember.name}</div>
+                  <div className="text-[11px] text-slate-400 font-mono truncate">{selectedRoleMember.email}</div>
+                </div>
+                <span className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-200/70 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                  Current: {selectedRoleMember.role}
+                </span>
+              </div>
+
+              {roleSuccessMsg && (
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>{roleSuccessMsg}</span>
+                </div>
+              )}
+
+              {roleErrorMsg && (
+                <div className="rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/40 p-3 text-xs font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                  <span>{roleErrorMsg}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Select New Role</label>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    {
+                      role: 'Superadmin' as AdminRole,
+                      title: 'Superadmin',
+                      desc: 'Full administrative access: summits, analytics, activity logs, backups & team permissions.'
+                    },
+                    {
+                      role: 'Event Admin' as AdminRole,
+                      title: 'Event Admin',
+                      desc: 'Can manage summits, custom frames, moments gallery, and view advocacy analytics.'
+                    },
+                    {
+                      role: 'Viewer' as AdminRole,
+                      title: 'Viewer',
+                      desc: 'Read-only access to summits, attendee leaderboard, and public moments photo stream.'
+                    }
+                  ].map((option) => (
+                    <label
+                      key={option.role}
+                      onClick={() => setNewRole(option.role)}
+                      className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                        newRole === option.role
+                          ? 'border-purple-500/80 bg-purple-500/5 dark:bg-purple-500/10 ring-1 ring-purple-500/40'
+                          : 'border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="teamRole"
+                        value={option.role}
+                        checked={newRole === option.role}
+                        onChange={() => setNewRole(option.role)}
+                        className="mt-0.5 accent-purple-600 h-4 w-4"
+                      />
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          {option.title}
+                          {selectedRoleMember.role === option.role && (
+                            <span className="text-[10px] text-slate-400 font-normal">(Current)</span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">{option.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-between items-center border-t border-slate-100 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => { setRoleModalOpen(false); setRoleSuccessMsg(''); setRoleErrorMsg(''); }}
+                  className="rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={newRole === selectedRoleMember.role || isUpdatingRole === selectedRoleMember._id}
+                  onClick={() => handleRoleUpdate(selectedRoleMember, newRole)}
+                  className="rounded-xl bg-purple-600 px-5 py-2 text-xs font-bold text-white hover:bg-purple-700 disabled:opacity-50 transition-all flex items-center gap-1.5 shadow-md shadow-purple-500/20"
+                >
+                  {isUpdatingRole === selectedRoleMember._id ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <span>Save Role</span>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

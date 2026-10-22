@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect, JWT_SECRET } = require('../middleware/auth');
+const activityLogger = require('../services/activityLogger');
 
 // 1. Initialize First Master Admin
 const initializeMasterAdmin = async () => {
@@ -232,8 +233,76 @@ router.delete('/:id', protect, async (req, res) => {
     if (req.user.role !== 'Superadmin') {
       return res.status(403).json({ error: 'Only Superadmins can remove members' });
     }
+    const previous = await User.findById(req.params.id);
+    if (!previous) return res.status(404).json({ error: 'User not found' });
+
     await User.findByIdAndDelete(req.params.id);
+
+    await activityLogger.log({
+      action: 'DELETE_USER',
+      entityType: 'User',
+      entityId: req.params.id,
+      description: `Removed team member "${previous.name}" (${previous.email})`,
+      performedBy: req.user.name || req.user.email || 'Superadmin',
+      previousState: previous.toObject(),
+      canUndo: true
+    }).catch(err => console.error('Failed to log user deletion:', err));
+
     res.json({ success: true, message: 'User removed' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. Update Team Member Role (Protected)
+router.put('/:id/role', protect, async (req, res) => {
+  try {
+    const actorRole = (req.user.role || '').toLowerCase().replace(/[\s_-]+/g, '');
+    if (actorRole !== 'superadmin') {
+      return res.status(403).json({ error: 'Only Superadmins can update member roles' });
+    }
+
+    const { role } = req.body;
+    const validRoles = ['Superadmin', 'Event Admin', 'Viewer'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Prevent demoting the last Superadmin if self-demoting
+    if (String(user._id) === String(req.user.id) && role !== 'Superadmin') {
+      const superAdminCount = await User.countDocuments({ role: 'Superadmin' });
+      if (superAdminCount <= 1) {
+        return res.status(400).json({ error: 'Cannot demote the last remaining Superadmin.' });
+      }
+    }
+
+    const previousRole = user.role;
+    user.role = role;
+    await user.save();
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    // Log the activity for audit & undo
+    await activityLogger.log({
+      action: 'UPDATE_USER_ROLE',
+      entityType: 'User',
+      entityId: user._id,
+      description: `Changed role for "${user.name}" (${user.email}) from ${previousRole} to ${role}`,
+      performedBy: req.user.name || req.user.email || 'Superadmin',
+      previousState: { role: previousRole },
+      newState: { role },
+      canUndo: true
+    }).catch(err => console.error('Failed to log role update:', err));
+
+    res.json({
+      success: true,
+      user: userObj,
+      message: `Role for ${user.name} updated to ${role} successfully`
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
