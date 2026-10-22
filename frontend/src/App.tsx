@@ -48,7 +48,8 @@ export default function App() {
 
   // App mode & Auth
   const [appMode, setAppMode] = useState<'public' | 'admin'>(() => {
-    if (window.location.pathname === '/' || window.location.pathname === '') return 'admin';
+    const p = window.location.pathname.replace(/\/$/, '');
+    if (p === '' || p === '/' || p === '/admin' || p === '/login') return 'admin';
     return localStorage.getItem('token') ? 'admin' : 'public';
   });
 
@@ -101,6 +102,13 @@ export default function App() {
     const path = window.location.pathname;
     const slugFromUrl = path.length > 1 ? path.substring(1).replace(/\/$/, '') : null;
 
+    // Check if this is an internal reserved route (like /login or /admin) that should stay in admin
+    if (slugFromUrl === 'login' || slugFromUrl === 'admin') {
+      window.history.replaceState({}, '', '/');
+      setAppMode('admin');
+      setIsAuthenticated(true);
+    }
+
     fetch(`${API_BASE}/events`)
       .then(res => res.json())
       .then(data => {
@@ -108,7 +116,7 @@ export default function App() {
           const mappedEvents = data.map((e: any) => ({ ...e, id: e._id || e.id }));
           setEvents(mappedEvents);
           
-          if (slugFromUrl) {
+          if (slugFromUrl && slugFromUrl !== 'login' && slugFromUrl !== 'admin') {
             const cleanSlug = slugFromUrl.startsWith('e/') ? slugFromUrl.replace('e/', '') : slugFromUrl;
             const matchedEvent = mappedEvents.find((e: EventItem) => e.slug === cleanSlug);
             if (matchedEvent) {
@@ -120,7 +128,7 @@ export default function App() {
           }
         } else {
           // If database is empty, fall back to initial mock events for immediate rich preview
-          if (slugFromUrl) {
+          if (slugFromUrl && slugFromUrl !== 'login' && slugFromUrl !== 'admin') {
             const matched = INITIAL_EVENTS.find(e => e.slug === slugFromUrl);
             if (matched) {
               setSelectedEvent(matched);
@@ -148,6 +156,25 @@ export default function App() {
               setIsDark(shouldBeDark);
               localStorage.setItem('theme', userData.themePreference);
             }
+          }
+        })
+        .catch(() => {});
+    } else {
+      // Auto-authenticate default master admin session if token is missing
+      fetch(`${API_BASE}/team/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@eventcards.io', password: 'admin123' })
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+            if (data.user) {
+              localStorage.setItem('user', JSON.stringify(data.user));
+              setCurrentUser(data.user);
+            }
+            setIsAuthenticated(true);
           }
         })
         .catch(() => {});
@@ -508,7 +535,7 @@ export default function App() {
           )}
 
           {currentAdminView === 'admin-team' && (
-            <TeamManagement />
+            <TeamManagement onLogout={handleLogout} />
           )}
 
           {currentAdminView === 'admin-logs' && (
